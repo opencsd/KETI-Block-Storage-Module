@@ -92,7 +92,7 @@ void Input::InputSnippet(){
           //로그
           char msg[200];
           memset(msg, '\0', sizeof(msg));
-          sprintf(msg,"Receive Snippet {ID : %d-%d} from Storage Engine Instance\n",parsedSnippet.query_id, parsedSnippet.work_id);
+          sprintf(msg,"Receive Snippet {ID : %d-%d} from Storage Engine Instance",parsedSnippet.query_id, parsedSnippet.work_id);
           KETILOG::INFOLOG(LOGTAG, msg);
 
           // printf("[CSD Input Interface] Receive Snippet {ID : %d-%d} from Storage Engine Instance\n",parsedSnippet.query_id, parsedSnippet.work_id);

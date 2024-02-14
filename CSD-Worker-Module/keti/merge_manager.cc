@@ -17,14 +17,15 @@ void MergeManager::MergeBlock(Result &result){
     if(m_MergeManager.find(key)==m_MergeManager.end()){
         MergeResult mergeResult(result.query_id, result.work_id, result.csd_name, 
         result.filter_info.projection_datatype, result.filter_info.projection_length, 
-        result.total_block_count, result.storage_engine_port, result.is_debug_mode);
+        result.total_block_count, result.storage_engine_port, result.table_total_block_count,
+         result.table_alias, result.column_alias, result.is_debug_mode);
         m_MergeManager[key] = mergeResult;
     }
 
     //data가 있는 경우만 수행
     if(result.row_count != 0){
         vector<int> new_row_offset;
-        new_row_offset.assign( result.row_offset.begin(), result.row_offset.end() );
+        new_row_offset.assign(result.row_offset.begin(), result.row_offset.end());
         new_row_offset.push_back(result.length);
 
         //새 블록 한 row씩 넣기
@@ -113,7 +114,7 @@ void MergeManager::MergeBlock(Result &result){
     float temp_size = float(m_MergeManager[key].length) / float(1024);
 
     memset(msg, '\0', sizeof(msg));
-    sprintf(msg,"Merging Block ... (Current Buffer Size : %.1fK)\n",temp_size);
+    sprintf(msg,"ID %d-%d :: (Block : %d/%d, Size : %.1fK)",result.query_id,result.work_id,m_MergeManager[key].current_block_count,m_MergeManager[key].total_block_count,temp_size);
     KETILOG::DEBUGLOG(LOGTAG, msg);
 
     //전체 블록 병합이 끝났는지 확인
@@ -122,7 +123,7 @@ void MergeManager::MergeBlock(Result &result){
         m_MergeManager[key].InitMergeResult();
 
         memset(msg, '\0', sizeof(msg));
-        sprintf(msg,"Merging Block {ID : %d-%d} Done (Block : %d/%d)\n",result.query_id,result.work_id,result.total_block_count,result.total_block_count);
+        sprintf(msg,"ID %d-%d :: Done (Block : %d/%d, Size : %.1fK)",result.query_id,result.work_id,m_MergeManager[key].current_block_count,m_MergeManager[key].total_block_count,temp_size);
         KETILOG::DEBUGLOG(LOGTAG, msg);
 
         m_MergeManager.erase(key);

@@ -40,9 +40,9 @@ int main(int argc, char** argv) {
     // Scan scan = Scan(CSDTableManager);
     // scan.Scanning();
     thread ScanLayer = thread(&Scan::Scanning, Scan());
-    thread ScanLayer2 = thread(&Scan::Scanning, Scan());
+    // thread ScanLayer2 = thread(&Scan::Scanning, Scan());
     thread FilterLayer = thread(&Filter::Filtering, Filter());
-    thread FilterLayer2 = thread(&Filter::Filtering, Filter());
+    // thread FilterLayer2 = thread(&Filter::Filtering, Filter());
     // thread FilterLayer3 = thread(&Filter::Filtering, Filter());
     // thread FilterLayer4 = thread(&Filter::Filtering, Filter());
     thread MergeLayer = thread(&MergeManager::Merging, MergeManager());
@@ -65,9 +65,9 @@ int main(int argc, char** argv) {
 
     InputInterface.join();
     ScanLayer.join();
-    ScanLayer2.join();
+    // ScanLayer2.join();
     FilterLayer.join();
-    FilterLayer2.join();
+    // FilterLayer2.join();
     // FilterLayer3.join();
     // FilterLayer4.join();
     MergeLayer.join();

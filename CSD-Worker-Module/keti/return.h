@@ -53,13 +53,17 @@ struct MergeResult{
     int filtered_row_count;
     string storage_engine_port;
     bool is_debug_mode;
+    int table_total_block_count;
+    string table_alias;
+    vector<string> column_alias;
 
     MergeResult(){}
     //merge.cc의 최초 생성자
     MergeResult(int query_id_, int work_id_, string csd_name_, 
     vector<int> projection_datatype_, vector<int> projection_length_,
     int total_block_count_, string storage_engine_port_,
-    bool is_debug_mode_ = false)
+    int table_total_block_count_, string table_alias_, 
+    vector<string> column_alias_, bool is_debug_mode_ = false)
     : query_id(query_id_),
       work_id(work_id_),
       csd_name(csd_name_),
@@ -76,6 +80,9 @@ struct MergeResult{
         current_block_count = 0;
         scanned_row_count = 0;
         filtered_row_count = 0;
+        table_total_block_count = table_total_block_count_;
+        table_alias = table_alias_;
+        column_alias = column_alias_;
     }
 
     void InitMergeResult(){

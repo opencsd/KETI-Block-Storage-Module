@@ -1,15 +1,9 @@
 #include "filter.h"
 
-int rownum = 0;
-int current_block_count = 0;
-int saverowcount = 0;
-int totalrownum = 0;
-
 void Filter::Filtering(){
     while (1)
     {
         Result scanResult = FilterQueue.wait_and_pop();
-        current_block_count += scanResult.result_block_count;
         BlockFilter(scanResult);
     }
 }
@@ -25,8 +19,9 @@ int Filter::BlockFilter(Result &scanResult)
     unordered_map<string, int> typedata;
 
     Result filterresult(scanResult.query_id, scanResult.work_id, scanResult.csd_name, scanResult.total_block_count,
-         scanResult.filter_info, scanResult.storage_engine_port, scanResult.result_block_count, 
-         scanResult.scanned_row_count, scanResult.filtered_row_count, scanResult.is_debug_mode);
+         scanResult.filter_info, scanResult.storage_engine_port, scanResult.table_total_block_count,
+         scanResult.table_alias, scanResult.column_alias, scanResult.is_debug_mode,
+         scanResult.result_block_count, scanResult.scanned_row_count, scanResult.filtered_row_count);
 
     int ColNum = scanResult.filter_info.table_col.size(); //컬럼 넘버로 컬럼의 수를 의미(스니펫을 통해 받은 컬럼의 수)
     int RowNum = scanResult.row_count;             //로우 넘버로 로우의 수를 의미(스캔에서 받은 로우의 수)
@@ -60,7 +55,6 @@ int Filter::BlockFilter(Result &scanResult)
         typedata.insert(make_pair(rowfilterdata.ColName[i],rowfilterdata.datatype[i]));
     }
     int iter = 0; //각 row의 시작점
-    totalrownum += RowNum;
     for (int i = 0; i < RowNum; i++)
     {
         rowfilterdata.offsetcount = 0;
@@ -1500,8 +1494,6 @@ int Filter::BlockFilter(Result &scanResult)
 
     filterresult.filtered_row_count = filterresult.row_count;
     sendfilterresult(filterresult);
-    saverowcount += rownum;
-    // cout << saverowcount << endl;
     return 0;
 }
 
@@ -1509,8 +1501,7 @@ void Filter::sendfilterresult(Result &filterresult_)
 {
     memset(msg, '\0', sizeof(msg));
     float temp_size = float(filterresult_.length) / float(1024);
-    // printf("[CSD Filter] Filtering Data ... \n");
-    // printf("[CSD Filter] Filtering Data ... (Block : %d/%d)\n",current_block_count,filterresult_.total_block_count);    sprintf(msg,"[CSD Filter] Filtering Data ... (Filtered Size : %.1fK)\n",temp_size);
+    sprintf(msg,"ID %d-%d :: (Size : %.1fK)",filterresult_.query_id, filterresult_.work_id,temp_size);
     KETILOG::DEBUGLOG(LOGTAG, msg);
     MergeQueue.push_work(filterresult_);
 }
@@ -1811,7 +1802,6 @@ void Filter::SavedRow(char *row, int startoff, Result &filterresult, int nowleng
     //  }
     //  cout << endl;
     // cout << "saved row" << endl;
-    rownum++;
     filterresult.row_count++;
     filterresult.row_offset.push_back(startoff);
     int newlen = 0;

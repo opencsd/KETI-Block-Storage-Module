@@ -103,14 +103,18 @@ struct Result{
     int filtered_row_count;
     string storage_engine_port;
     bool is_debug_mode;
+    int table_total_block_count;
+    string table_alias;
+    vector<string> column_alias;
 
     //scan, filter의 최초 생성자
     Result(
       int query_id_, int work_id_, string csd_name_,
       int total_block_count_, FilterInfo filter_info_,
-      string storage_engine_port_, int result_block_count_ = 0,
-      int scanned_row_count_ = 0, int filtered_row_count_ = 0,
-      bool is_debug_mode_  = false){
+      string storage_engine_port_, int table_total_block_count_,
+      string table_alias_, vector<string> column_alias_, 
+      bool is_debug_mode_  = false, int result_block_count_ = 0, 
+      int scanned_row_count_ = 0, int filtered_row_count_ = 0){
           query_id = query_id_;
           work_id = work_id_; 
           csd_name = csd_name_;
@@ -126,6 +130,9 @@ struct Result{
           scanned_row_count = scanned_row_count_;
           filtered_row_count = filtered_row_count_;
           is_debug_mode = is_debug_mode_;
+          table_total_block_count = table_total_block_count_;
+          table_alias = table_alias_;
+          column_alias = column_alias_;
         } 
  
     void InitResult(){
