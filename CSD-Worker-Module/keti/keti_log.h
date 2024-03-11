@@ -74,67 +74,67 @@ class KETILOG {
 
         static void TRACELOG(std::string id, const char msg[]){
             if(GetInstance().LOG_LEVEL <= TRACE){
-                printf("[%s] %s", id.c_str(), msg);
+                printf("[%s] %s\n", id.c_str(), msg);
             }
         }
 
         static void DEBUGLOG(std::string id, const char msg[]){
             if(GetInstance().LOG_LEVEL <= DEBUG){
-                printf("[%s] %s", id.c_str(), msg);
+                printf("[%s] %s\n", id.c_str(), msg);
             }
         }
 
         static void DEBUGLOG(std::string id, string msg){
             if(GetInstance().LOG_LEVEL <= INFO){
-                printf("[%s] %s", id.c_str(), msg.c_str());
+                printf("[%s] %s\n", id.c_str(), msg.c_str());
             }
         }
 
         static void INFOLOG(std::string id, const char msg[]){
             if(GetInstance().LOG_LEVEL <= INFO){
-                printf("[%s] %s", id.c_str(), msg);
+                printf("[%s] %s\n", id.c_str(), msg);
             }
         }
 
         static void INFOLOG(std::string id, string msg){
             if(GetInstance().LOG_LEVEL <= INFO){
-                printf("[%s] %s", id.c_str(), msg.c_str());
+                printf("[%s] %s\n", id.c_str(), msg.c_str());
             }
         }
 
         static void WARNLOG(std::string id, const char msg[]){
             if(GetInstance().LOG_LEVEL <= WARN){
-                printf("[%s] %s", id.c_str(), msg);
+                printf("[%s] %s\n", id.c_str(), msg);
             }
         }
 
         static void WARNLOG(std::string id, string msg){
             if(GetInstance().LOG_LEVEL <= ERROR){
-                printf("[%s] %s", id.c_str(), msg.c_str());
+                printf("[%s] %s\n", id.c_str(), msg.c_str());
             }
         }
 
         static void ERRORLOG(std::string id, const char msg[]){
             if(GetInstance().LOG_LEVEL <= ERROR){
-                printf("[%s] %s", id.c_str(), msg);
+                printf("[%s] %s\n", id.c_str(), msg);
             }
         }
 
         static void ERRORLOG(std::string id, string msg){
             if(GetInstance().LOG_LEVEL <= FATAL){
-                printf("[%s] %s", id.c_str(), msg.c_str());
+                printf("[%s] %s\n", id.c_str(), msg.c_str());
             }
         }
 
         static void FATALLOG(std::string id, const char msg[]){
             if(GetInstance().LOG_LEVEL <= FATAL){
-                printf("[%s] %s", id.c_str(), msg);
+                printf("[%s] %s\n", id.c_str(), msg);
             }
         }
 
         static void FATALLOG(std::string id, string msg){
             if(GetInstance().LOG_LEVEL <= FATAL){
-                printf("[%s] %s", id.c_str(), msg.c_str());
+                printf("[%s] %s\n", id.c_str(), msg.c_str());
             }
         }
 

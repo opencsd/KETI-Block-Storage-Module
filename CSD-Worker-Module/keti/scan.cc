@@ -6,9 +6,6 @@
 
 using namespace ROCKSDB_NAMESPACE;
 
-int temp = 0; //kjh test
-int current_row_count = 0; //kjh test
-
 char sep = 0x03;
 char gap = 0x20;
 char fin = 0x02;
@@ -55,14 +52,14 @@ void Scan::TableScan(Snippet snippet){
     snippet.column_projection, snippet.projection_datatype, snippet.projection_length);
 
   Result scanResult(snippet.query_id, snippet.work_id, snippet.csd_name, snippet.total_block_count, 
-        filterInfo, snippet.storage_engine_port, snippet.is_debug_mode);
+        filterInfo, snippet.storage_engine_port, snippet.table_total_block_count, snippet.table_alias,
+        snippet.column_alias, snippet.is_debug_mode);
   
   current_block_count = 0;
   index_valid = true;
   ipk = 0;
   check = true;
   total_block_row_count = 0;
-  temp = 0; //kjh test
 
   // if(snippet.is_inserted){
   //   WalScan(&snippet, &scanResult);
@@ -72,9 +69,7 @@ void Scan::TableScan(Snippet snippet){
 
   list<BlockInfo>::iterator iter;
   for(iter = snippet.block_info_list.begin(); iter != snippet.block_info_list.end(); iter++){//블록
-      current_block_count++;
-      current_row_count = 0;//kjh test
-      
+      current_block_count++;      
       scanResult.result_block_count++;
 
       BlockInfo blockInfo = *iter;
@@ -88,8 +83,7 @@ void Scan::TableScan(Snippet snippet){
       if(current_block_count == snippet.total_block_count){
         float temp_size = float(scanResult.length) / float(1024);
         memset(msg, '\0', sizeof(msg));
-        // sprintf(msg,"Scanning Data ... (Block : %d/%d, Scanned Size : %.1fK, Total Rows: %d, BLock Rows: %d)\n",current_block_count,snippet.total_block_count,temp_size, total_block_row_count, temp);
-        sprintf(msg,"Scanning Data ... (Block : %d/%d, Scanned Size : %.1fK, Total Rows: %d)\n",current_block_count,snippet.total_block_count,temp_size, total_block_row_count);
+        sprintf(msg,"ID %d-%d :: Done (Block : %d/%d, Size : %.1fK, Total Rows: %d)",snippet.query_id, snippet.work_id,current_block_count,snippet.total_block_count,temp_size, total_block_row_count);
         KETILOG::INFOLOG(LOGTAG, msg);
         EnQueueData(scanResult, snippet);
         scanResult.InitResult();
@@ -97,18 +91,12 @@ void Scan::TableScan(Snippet snippet){
       }else if(current_block_count % NUM_OF_BLOCKS == 0){
         float temp_size = float(scanResult.length) / float(1024);
         memset(msg, '\0', sizeof(msg));
-        // sprintf(msg,"Scanning Data ... (Block : %d/%d, Scanned Size : %.1fK, Blcok Rows: %d)\n",current_block_count,snippet.total_block_count,temp_size, temp);
-        sprintf(msg,"Scanning Data ... (Block : %d/%d, Scanned Size : %.1fK)\n",current_block_count,snippet.total_block_count,temp_size);
+        sprintf(msg,"ID %d-%d :: (Block : %d/%d, Size : %.1fK)",snippet.query_id, snippet.work_id,current_block_count,snippet.total_block_count,temp_size);
         KETILOG::DEBUGLOG(LOGTAG, msg);
         
-        temp = 0;//kjh
         EnQueueData(scanResult, snippet);
         scanResult.InitResult();
       }
-
-      memset(msg, '\0', sizeof(msg));
-      sprintf(msg,"current block count : %d | current row count : %d\n", current_block_count, current_row_count);//kjh test
-      KETILOG::TRACELOG(LOGTAG, msg);
   }
   
 }
@@ -128,7 +116,7 @@ void Scan::WalScan(Snippet *snippet_, Result *scan_result){
 void Scan::BlockScan(SstBlockReader* sstBlockReader_, BlockInfo* blockInfo, Snippet *snippet_, Result *scan_result){
   Status s  = sstBlockReader_->Open(blockInfo);
   if(!s.ok()){
-      KETILOG::ERRORLOG(LOGTAG, "Block Open Error \n");
+      KETILOG::ERRORLOG(LOGTAG, "Block Open Error");
   }
 
   const char* ikey_data;
@@ -143,7 +131,7 @@ void Scan::BlockScan(SstBlockReader* sstBlockReader_, BlockInfo* blockInfo, Snip
       
       Status s = datablock_iter->status();
       if (!s.ok()) {
-        KETILOG::ERRORLOG(LOGTAG, "Error reading the block - Skipped \n");
+        KETILOG::ERRORLOG(LOGTAG, "Error reading the block - Skipped");
         break;
       }               
 
@@ -166,7 +154,7 @@ void Scan::BlockScan(SstBlockReader* sstBlockReader_, BlockInfo* blockInfo, Snip
       char index_num[INDEX_NUM_SIZE];
       memcpy(index_num,ikey_data,INDEX_NUM_SIZE);
       if(memcmp(origin_index_num/*snippet_->index_num*/, index_num, INDEX_NUM_SIZE) != 0){//출력 지우지 말기
-        KETILOG::WARNLOG(LOGTAG, "index invalid \n");
+        KETILOG::WARNLOG(LOGTAG, "index invalid");
         index_valid = false;
         return;
       }
@@ -183,8 +171,6 @@ void Scan::BlockScan(SstBlockReader* sstBlockReader_, BlockInfo* blockInfo, Snip
 
       scan_result->row_offset.push_back(scan_result->length);
       total_block_row_count++;
-      current_row_count++;
-      temp++;
 
       if(snippet_->primary_length != 0){//pk있으면 붙이기
         char total_row_data[snippet_->primary_length+row_size];
@@ -425,7 +411,7 @@ int Scan::getPrimaryKeyData(const char* ikey_data, char* dest, list<PrimaryKey> 
           pk_length += var_key_length;
           break;
         }default:{
-          KETILOG::FATALLOG(LOGTAG, "Data Type Not Defined! ("+to_string(key_type)+ ")\n");
+          KETILOG::FATALLOG(LOGTAG, "Data Type Not Defined! ("+to_string(key_type)+ ")");
         }
       }
   }

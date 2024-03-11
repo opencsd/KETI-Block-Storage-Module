@@ -12,7 +12,7 @@ void Return::ReturnResult(){
 void Return::SendDataToBufferManager(MergeResult &mergeResult){
     float temp_size = float(mergeResult.length) / float(1024);
     memset(msg, '\0', sizeof(msg));
-    sprintf(msg,"Send Data to Buffer Manager (Return Buffer Size : %.1fK)\n\n",temp_size);
+    sprintf(msg,"ID %d-%d :: (Size : %.1fK)",mergeResult.query_id,mergeResult.work_id,temp_size);
     KETILOG::DEBUGLOG(LOGTAG, msg);
 
     if(mergeResult.total_block_count == mergeResult.current_block_count){
@@ -22,7 +22,7 @@ void Return::SendDataToBufferManager(MergeResult &mergeResult){
         }
         
         memset(msg, '\0', sizeof(msg));
-        sprintf(msg,"Snippet {ID : %d-%d} Done\n",mergeResult.query_id,mergeResult.work_id);
+        sprintf(msg,"ID %d-%d :: CSD Work Done",mergeResult.query_id,mergeResult.work_id);
         KETILOG::INFOLOG(LOGTAG, msg);
     }
 
@@ -77,6 +77,19 @@ void Return::SendDataToBufferManager(MergeResult &mergeResult){
 
     writer.Key("filteredRowCount");
     writer.Int(mergeResult.filtered_row_count);
+
+    writer.Key("columnAlias");
+    writer.StartArray();
+    for (int i = 0; i < mergeResult.column_alias.size(); i++){
+        writer.String(mergeResult.column_alias[i].c_str());
+    }
+    writer.EndArray();
+
+    writer.Key("tableTotalBlockCount");
+    writer.Int(mergeResult.table_total_block_count);
+    
+    writer.Key("tableAlias");
+    writer.String(mergeResult.table_alias.c_str());
 
     writer.EndObject();
 

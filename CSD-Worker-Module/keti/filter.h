@@ -19,6 +19,7 @@ public:
     unordered_map<string, int> newlengthraw;
     unordered_map<string,string> joinmap;
     char data[BUFF_SIZE];
+    
     struct RowFilterData{
         vector<int> startoff;
         vector<int> offlen;

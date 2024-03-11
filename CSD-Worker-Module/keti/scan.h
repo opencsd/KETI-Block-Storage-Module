@@ -67,12 +67,15 @@ struct Snippet{
     int query_id;//*쿼리ID
     string csd_name;//*csd이름
     string table_name;//*스캔 테이블 이름
+    string table_alias;//*결과 테이블 이름
     vector<string> table_col;//*스캔 테이블 컬럼명
     vector<int> table_offset;//*스캔 테이블 컬럼오프셋
     vector<int> table_offlen;//*스캔 테이블 컬럼길이
     vector<int> table_datatype;//*스캔 테이블 컬럼타입
+    vector<string> column_alias;//*결과의 컬럼명
     list<BlockInfo> block_info_list;//*스캔 블록 리스트
-    int total_block_count;//전체 블록 수
+    int table_total_block_count;//*테이블 전체 블록 수
+    int total_block_count;//sst파일 전체 블록 수
     unordered_map<string, int> colindexmap;//컬럼의 순서
     list<PrimaryKey> primary_key_list;//테이블 pk 정보 *primary_count 
     uint64_t kNumInternalBytes;//key에 붙는 디폴트값 길이
@@ -103,6 +106,8 @@ struct Snippet{
         work_id = document["workID"].GetInt();
         csd_name = document["csdName"].GetString();
         table_name = document["tableName"].GetString();
+        table_alias = document["tableAlias"].GetString();
+        table_total_block_count = document["tableTotalBlockCount"].GetInt();
         
         int primary_count = document["primaryKey"].GetInt();
         if(primary_count == 0){
@@ -143,26 +148,34 @@ struct Snippet{
         colindexmap.clear();
         primary_key_list.clear();
         Value &table_col_ = document["tableCol"];
-        for(int j=0; j<table_col_.Size(); j++){
-            string col = table_col_[j].GetString();
-            int startoff = document["tableOffset"][j].GetInt();
-            int offlen = document["tableOfflen"][j].GetInt();
-            int datatype = document["tableDatatype"][j].GetInt();
+        for(int i=0; i<table_col_.Size(); i++){
+            string col = table_col_[i].GetString();
+            int startoff = document["tableOffset"][i].GetInt();
+            int offlen = document["tableOfflen"][i].GetInt();
+            int datatype = document["tableDatatype"][i].GetInt();
             table_col.push_back(col);
             table_offset.push_back(startoff);
             table_offlen.push_back(offlen);
             table_datatype.push_back(datatype);
-            colindexmap.insert({col,j});
+            colindexmap.insert({col,i});
             
             //pk 정보 저장
             primary_length = 0;
-            if(j<primary_count){
-              string key_name_ = document["tableCol"][j].GetString();
-              int key_type_ = document["tableDatatype"][j].GetInt();
-              int key_length_ = document["tableOfflen"][j].GetInt();
+            if(i<primary_count){
+              string key_name_ = document["tableCol"][i].GetString();
+              int key_type_ = document["tableDatatype"][i].GetInt();
+              int key_length_ = document["tableOfflen"][i].GetInt();
               primary_key_list.push_back(PrimaryKey{key_name_,key_type_,key_length_});
               primary_length += key_length_;
             }
+        }
+
+        //프로젝션 컬럼명 저장
+        column_alias.clear();
+        Value &column_alias_ = document["columnAlias"];
+        for(int i=0; i<column_alias_.Size(); i++){
+            string col = column_alias_[i].GetString();
+            column_alias.push_back(col);
         }
 
         //컬럼 프로젝션 정보 저장
