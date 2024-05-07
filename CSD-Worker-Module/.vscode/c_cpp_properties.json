@@ -5,7 +5,7 @@
             "includePath": [
                 "${workspaceFolder}/**",
                 "${workspaceFolder}/rocksdb/**",
-                "/root/workspace/keti/CSD-Worker-Module/rocksdb"
+                "/root/workspace/keti/KETI-Block-Storage-Module/CSD-Worker-Module/rocksdb/include"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/cpp",
