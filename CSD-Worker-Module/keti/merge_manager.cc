@@ -16,9 +16,9 @@ void MergeManager::MergeBlock(Result &result){
     //Key에 해당하는 블록버퍼가 없다면 생성
     if(m_MergeManager.find(key)==m_MergeManager.end()){
         MergeResult mergeResult(result.query_id, result.work_id, result.csd_name, 
-        result.filter_info.projection_datatype, result.filter_info.projection_length, 
-        result.total_block_count, result.storage_engine_port, result.table_total_block_count,
-         result.table_alias, result.column_alias, result.is_debug_mode);
+            result.filter_info.projection_datatype, result.filter_info.projection_length, 
+            result.storage_engine_port, result.sst_total_block_count, result.csd_total_block_count,
+            result.table_total_block_count, result.table_alias, result.column_alias, result.is_debug_mode);
         m_MergeManager[key] = mergeResult;
     }
 
@@ -103,7 +103,6 @@ void MergeManager::MergeBlock(Result &result){
             memcpy(m_MergeManager[key].data+current_offset, new_row_data, new_row_len);
             m_MergeManager[key].length += new_row_len;// 데이터 길이 = row 전체 길이
         }
-
     }
 
     m_MergeManager[key].scanned_row_count += result.scanned_row_count;
@@ -114,17 +113,18 @@ void MergeManager::MergeBlock(Result &result){
     float temp_size = float(m_MergeManager[key].length) / float(1024);
 
     memset(msg, '\0', sizeof(msg));
-    sprintf(msg,"ID %d-%d :: (Block : %d/%d, Size : %.1fK)",result.query_id,result.work_id,m_MergeManager[key].current_block_count,m_MergeManager[key].total_block_count,temp_size);
+    sprintf(msg,"ID %d-%d :: (Block : %d/%d, Size : %.1fK)",result.query_id,result.work_id,m_MergeManager[key].current_block_count,m_MergeManager[key].csd_total_block_count,temp_size);
     KETILOG::DEBUGLOG(LOGTAG, msg);
 
     //전체 블록 병합이 끝났는지 확인
-    if(m_MergeManager[key].total_block_count == m_MergeManager[key].current_block_count){
+    if(m_MergeManager[key].csd_total_block_count == m_MergeManager[key].current_block_count){
         ReturnQueue.push_work(m_MergeManager[key]);
-        m_MergeManager[key].InitMergeResult();
 
         memset(msg, '\0', sizeof(msg));
-        sprintf(msg,"ID %d-%d :: Done (Block : %d/%d, Size : %.1fK)",result.query_id,result.work_id,m_MergeManager[key].current_block_count,m_MergeManager[key].total_block_count,temp_size);
+        sprintf(msg,"ID %d-%d :: Done (Block : %d/%d, Size : %.1fK)",result.query_id,result.work_id,m_MergeManager[key].current_block_count,m_MergeManager[key].csd_total_block_count,temp_size);
         KETILOG::DEBUGLOG(LOGTAG, msg);
+
+        m_MergeManager[key].InitMergeResult();
 
         m_MergeManager.erase(key);
     }
@@ -746,4 +746,8 @@ void MergeManager::getColOffset(const char* origin_row_data, FilterInfo filter_i
 
         col_offset_list[i] = new_col_offset;
     }
+}
+
+void MergeManager::eraseKey(const pair_key key){
+
 }

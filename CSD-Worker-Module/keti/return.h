@@ -46,13 +46,14 @@ struct MergeResult{
     int length;
     vector<int> projection_datatype;
     vector<int> projection_length;
-    int total_block_count;
     int result_block_count;
     int current_block_count;
     int scanned_row_count;
     int filtered_row_count;
     string storage_engine_port;
     bool is_debug_mode;
+    int sst_total_block_count;
+    int csd_total_block_count;
     int table_total_block_count;
     string table_alias;
     vector<string> column_alias;
@@ -61,7 +62,7 @@ struct MergeResult{
     //merge.cc의 최초 생성자
     MergeResult(int query_id_, int work_id_, string csd_name_, 
     vector<int> projection_datatype_, vector<int> projection_length_,
-    int total_block_count_, string storage_engine_port_,
+    string storage_engine_port_, int sst_total_block_count_, int csd_total_block_count_, 
     int table_total_block_count_, string table_alias_, 
     vector<string> column_alias_, bool is_debug_mode_ = false)
     : query_id(query_id_),
@@ -69,7 +70,9 @@ struct MergeResult{
       csd_name(csd_name_),
       projection_datatype(projection_datatype_),
       projection_length(projection_length_),
-      total_block_count(total_block_count_),
+      sst_total_block_count(sst_total_block_count_),
+      csd_total_block_count(csd_total_block_count_),
+      table_total_block_count(table_total_block_count_),
       storage_engine_port(storage_engine_port_),
       is_debug_mode(is_debug_mode_){
         row_offset.clear();
@@ -80,7 +83,6 @@ struct MergeResult{
         current_block_count = 0;
         scanned_row_count = 0;
         filtered_row_count = 0;
-        table_total_block_count = table_total_block_count_;
         table_alias = table_alias_;
         column_alias = column_alias_;
     }

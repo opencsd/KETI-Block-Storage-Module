@@ -3,9 +3,9 @@
         {
             "name": "Linux",
             "includePath": [
-                "${workspaceFolder}/**",
-                "${workspaceFolder}/rocksdb/**",
-                "/root/workspace/keti/KETI-Block-Storage-Module/CSD-Worker-Module/rocksdb/include"
+                "${workspaceFolder}/rocksdb/include/rocksdb/**",
+                "/root/workspace/keti/KETI-Block-Storage-Module/CSD-Worker-Module/rocksdb/include/**",
+                "/root/workspace/keti/KETI-Block-Storage-Module/CSD-Worker-Module/rocksdb/include/rocksdb/sst_file_reader.h"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/cpp",

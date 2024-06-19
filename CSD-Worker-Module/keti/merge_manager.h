@@ -49,6 +49,7 @@ private:
     int calculSubstring(FilterInfo filter_info, char* origin_row_data, int* col_offset, int l, char* dest);
     int calculExtract(FilterInfo filter_info, char* origin_row_data, int* col_offset, int l, char* dest);
     int calculPostfix(vector<string> values, vector<int> types, FilterInfo filter_info, char* origin_row_data, int* col_offset, char* dest, int projection_datatype);
+    void eraseKey(const pair_key key);
 };
 
 
@@ -91,8 +92,13 @@ struct Result{
     int query_id;
     int work_id;
     string csd_name;
-    int total_block_count;
     FilterInfo filter_info;
+    string storage_engine_port;
+    int sst_total_block_count;
+    int csd_total_block_count;
+    int table_total_block_count;
+    string table_alias;
+    vector<string> column_alias;
     int row_count;
     int length;
     char data[BUFF_SIZE];
@@ -101,38 +107,35 @@ struct Result{
     int result_block_count;
     int scanned_row_count;
     int filtered_row_count;
-    string storage_engine_port;
     bool is_debug_mode;
-    int table_total_block_count;
-    string table_alias;
-    vector<string> column_alias;
 
     //scan, filter의 최초 생성자
     Result(
-      int query_id_, int work_id_, string csd_name_,
-      int total_block_count_, FilterInfo filter_info_,
-      string storage_engine_port_, int table_total_block_count_,
+      int query_id_, int work_id_, string csd_name_, 
+      FilterInfo filter_info_, string storage_engine_port_, 
+      int sst_total_block_count_, int csd_total_block_count_, int table_total_block_count_,
       string table_alias_, vector<string> column_alias_, 
       bool is_debug_mode_  = false, int result_block_count_ = 0, 
       int scanned_row_count_ = 0, int filtered_row_count_ = 0){
           query_id = query_id_;
           work_id = work_id_; 
           csd_name = csd_name_;
-          total_block_count = total_block_count_;
           filter_info = filter_info_;
-          result_block_count = result_block_count_;
           storage_engine_port = storage_engine_port_;
+          sst_total_block_count = sst_total_block_count_;
+          csd_total_block_count = csd_total_block_count_;
+          table_total_block_count = table_total_block_count_;
+          table_alias = table_alias_;
+          column_alias = column_alias_;
           row_count = 0;
           length = 0;
           memset(&data, 0, sizeof(BUFF_SIZE));
           row_offset.clear();
           row_column_offset.clear();
+          is_debug_mode = is_debug_mode_;
+          result_block_count = result_block_count_;
           scanned_row_count = scanned_row_count_;
           filtered_row_count = filtered_row_count_;
-          is_debug_mode = is_debug_mode_;
-          table_total_block_count = table_total_block_count_;
-          table_alias = table_alias_;
-          column_alias = column_alias_;
         } 
  
     void InitResult(){
