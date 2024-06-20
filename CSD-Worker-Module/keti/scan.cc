@@ -344,8 +344,18 @@ int Scan::getPrimaryKeyData(const char* ikey_data, char* dest, list<PrimaryKey> 
       int key_type = (*piter).key_type;
 
       switch(key_type){
-        case MySQL_INT32:
-        case MySQL_INT64:{
+        case MySQL_INT32:{
+          char pk[key_length];
+          pk[0] = 0x00;//ikey[81 0C EE 05]->ikey[00 00 00 00 00 00 00 01]
+          for(int i = 0; i < key_length; i++){
+            pk[i] = ikey_data[offset+key_length-i-1];
+            //ikey[00 00 00 00 00 00 00 01]->dest[01 00 00 00 00 00 00 00]
+          }
+          memcpy(dest+pk_length, pk, key_length);
+          pk_length += key_length;
+          offset += key_length;
+          break;
+        }case MySQL_INT64:{
           char pk[key_length];
           pk[0] = 0x00;//ikey[80 00 00 00 00 00 00 01]->ikey[00 00 00 00 00 00 00 01]
           for(int i = 0; i < key_length; i++){

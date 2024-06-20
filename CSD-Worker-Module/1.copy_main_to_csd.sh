@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 
-desc="/root/csd-worder-module"
-#desc="/home/ngd/workspace/KETI-Block-Storage-Module/CSD-Worker-Module"
+desc="/root/opencsd/csd-worker-module/"
 password="1234"
 
 for((i=1;i<9;i++)); 
