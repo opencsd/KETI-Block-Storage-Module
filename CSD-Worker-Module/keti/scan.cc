@@ -357,7 +357,7 @@ int Scan::getPrimaryKeyData(const char* ikey_data, char* dest, list<PrimaryKey> 
           break;
         }case MySQL_INT64:{
           char pk[key_length];
-          pk[0] = 0x00;//ikey[80 00 00 00 00 00 00 01]->ikey[00 00 00 00 00 00 00 01]
+          pk[0] ^= 0x80;//맨 앞 바이트의 맨 앞 비트를 bitwise 해야함!!
           for(int i = 0; i < key_length; i++){
             pk[i] = ikey_data[offset+key_length-i-1];
             //ikey[00 00 00 00 00 00 00 01]->dest[01 00 00 00 00 00 00 00]
