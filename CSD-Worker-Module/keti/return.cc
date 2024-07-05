@@ -15,7 +15,7 @@ void Return::SendDataToBufferManager(MergeResult &mergeResult){
     sprintf(msg,"ID %d-%d :: (Size : %.1fK)",mergeResult.query_id,mergeResult.work_id,temp_size);
     KETILOG::DEBUGLOG(LOGTAG, msg);
 
-    if(mergeResult.total_block_count == mergeResult.current_block_count){
+    if(mergeResult.csd_total_block_count == mergeResult.current_block_count){
         if(KETILOG::GetLogLevel() == METRIC){
             httplib::Client cli("localhost",40502);
             auto res = cli.Get("/endCSD");

@@ -41,6 +41,8 @@ int main(int argc, char** argv) {
     // scan.Scanning();
     thread ScanLayer = thread(&Scan::Scanning, Scan());
     // thread ScanLayer2 = thread(&Scan::Scanning, Scan());
+    // thread ScanLayer3 = thread(&Scan::Scanning, Scan());
+    // thread ScanLayer4 = thread(&Scan::Scanning, Scan());
     thread FilterLayer = thread(&Filter::Filtering, Filter());
     // thread FilterLayer2 = thread(&Filter::Filtering, Filter());
     // thread FilterLayer3 = thread(&Filter::Filtering, Filter());
@@ -66,6 +68,8 @@ int main(int argc, char** argv) {
     InputInterface.join();
     ScanLayer.join();
     // ScanLayer2.join();
+    // ScanLayer3.join();
+    // ScanLayer4.join();
     FilterLayer.join();
     // FilterLayer2.join();
     // FilterLayer3.join();

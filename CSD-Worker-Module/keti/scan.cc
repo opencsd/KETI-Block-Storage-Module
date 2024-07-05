@@ -3,7 +3,6 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory)
 #include "scan.h"
-
 using namespace ROCKSDB_NAMESPACE;
 
 char sep = 0x03;
@@ -51,9 +50,9 @@ void Scan::TableScan(Snippet snippet){
     snippet.table_datatype, snippet.colindexmap, snippet.table_filter,
     snippet.column_projection, snippet.projection_datatype, snippet.projection_length);
 
-  Result scanResult(snippet.query_id, snippet.work_id, snippet.csd_name, snippet.total_block_count, 
-        filterInfo, snippet.storage_engine_port, snippet.table_total_block_count, snippet.table_alias,
-        snippet.column_alias, snippet.is_debug_mode);
+  Result scanResult(snippet.query_id, snippet.work_id, snippet.csd_name, filterInfo,
+    snippet.storage_engine_port, snippet.sst_total_block_count, snippet.csd_total_block_count,
+    snippet.table_total_block_count, snippet.table_alias, snippet.column_alias, snippet.is_debug_mode);
   
   current_block_count = 0;
   index_valid = true;
@@ -73,32 +72,32 @@ void Scan::TableScan(Snippet snippet){
       scanResult.result_block_count++;
 
       BlockInfo blockInfo = *iter;
-      BlockScan(&sstBlockReader, &blockInfo, &snippet, &scanResult);
+      BlockScan(sstBlockReader, blockInfo, snippet, scanResult);
 
       if(!index_valid){
-        scanResult.result_block_count += snippet.total_block_count - current_block_count;
-        current_block_count = snippet.total_block_count;
+        scanResult.result_block_count += snippet.sst_total_block_count - current_block_count;
+        current_block_count = snippet.sst_total_block_count;
       }
 
-      if(current_block_count == snippet.total_block_count){
+      if(current_block_count == snippet.sst_total_block_count){
         float temp_size = float(scanResult.length) / float(1024);
         memset(msg, '\0', sizeof(msg));
-        sprintf(msg,"ID %d-%d :: Done (Block : %d/%d, Size : %.1fK, Total Rows: %d)",snippet.query_id, snippet.work_id,current_block_count,snippet.total_block_count,temp_size, total_block_row_count);
+        sprintf(msg,"ID %d-%d :: Done (Block : %d/%d, Size : %.1fK, Total Rows: %d)",snippet.query_id, snippet.work_id,current_block_count,snippet.sst_total_block_count,temp_size, total_block_row_count);
         KETILOG::INFOLOG(LOGTAG, msg);
+        
         EnQueueData(scanResult, snippet);
         scanResult.InitResult();
         break;
       }else if(current_block_count % NUM_OF_BLOCKS == 0){
         float temp_size = float(scanResult.length) / float(1024);
         memset(msg, '\0', sizeof(msg));
-        sprintf(msg,"ID %d-%d :: (Block : %d/%d, Size : %.1fK)",snippet.query_id, snippet.work_id,current_block_count,snippet.total_block_count,temp_size);
+        sprintf(msg,"ID %d-%d :: (Block : %d/%d, Size : %.1fK)",snippet.query_id, snippet.work_id,current_block_count,snippet.sst_total_block_count,temp_size);
         KETILOG::DEBUGLOG(LOGTAG, msg);
-        
+
         EnQueueData(scanResult, snippet);
         scanResult.InitResult();
       }
   }
-  
 }
 
 void Scan::WalScan(Snippet *snippet_, Result *scan_result){
@@ -113,8 +112,8 @@ void Scan::WalScan(Snippet *snippet_, Result *scan_result){
   }
 }
 
-void Scan::BlockScan(SstBlockReader* sstBlockReader_, BlockInfo* blockInfo, Snippet *snippet_, Result *scan_result){
-  Status s  = sstBlockReader_->Open(blockInfo);
+void Scan::BlockScan(SstBlockReader &sstBlockReader_, BlockInfo &blockInfo, Snippet &snippet_, Result &scan_result){
+  Status s  = sstBlockReader_.Open(&blockInfo);
   if(!s.ok()){
       KETILOG::ERRORLOG(LOGTAG, "Block Open Error");
   }
@@ -123,9 +122,9 @@ void Scan::BlockScan(SstBlockReader* sstBlockReader_, BlockInfo* blockInfo, Snip
   const char* row_data;
   size_t row_size;
 
-  Iterator* datablock_iter = sstBlockReader_->NewIterator(ReadOptions());
+  Iterator* datablock_iter = sstBlockReader_.NewIterator(ReadOptions());
 
-  if(snippet_->scan_type == Full_Scan_Filter || snippet_->scan_type == Full_Scan){//full table scan
+  if(snippet_.scan_type == Full_Scan_Filter || snippet_.scan_type == Full_Scan){//full table scan
 
     for (datablock_iter->SeekToFirst(); datablock_iter->Valid(); datablock_iter->Next()) {//iterator first부터 순회
       
@@ -139,7 +138,7 @@ void Scan::BlockScan(SstBlockReader* sstBlockReader_, BlockInfo* blockInfo, Snip
       const Slice& value = datablock_iter->value();
 
       InternalKey ikey;
-      ikey.DecodeFrom(key, snippet_->kNumInternalBytes);
+      ikey.DecodeFrom(key, snippet_.kNumInternalBytes);
 
       ikey_data = ikey.user_key().data();
       row_data = value.data();
@@ -169,24 +168,24 @@ void Scan::BlockScan(SstBlockReader* sstBlockReader_, BlockInfo* blockInfo, Snip
       
       // std::cout << "[Row(HEX)] KEY: " << ikey.user_key().ToString(true) << " | VALUE: " << value.ToString(true) << endl;
 
-      scan_result->row_offset.push_back(scan_result->length);
+      scan_result.row_offset.push_back(scan_result.length);
       total_block_row_count++;
 
-      if(snippet_->primary_length != 0){//pk있으면 붙이기
-        char total_row_data[snippet_->primary_length+row_size];
+      if(snippet_.primary_length != 0){//pk있으면 붙이기
+        char total_row_data[snippet_.primary_length+row_size];
         int pk_length;
 
-        pk_length = getPrimaryKeyData(ikey_data, total_row_data, snippet_->primary_key_list);//key
+        pk_length = getPrimaryKeyData(ikey_data, total_row_data, snippet_.primary_key_list);//key
        
         memcpy(total_row_data + pk_length, row_data, row_size);//key+value
-        memcpy(scan_result->data + scan_result->length, total_row_data, pk_length + row_size);//buff+key+value
+        memcpy(scan_result.data + scan_result.length, total_row_data, pk_length + row_size);//buff+key+value
         
-        scan_result->length += row_size + pk_length;
-        scan_result->row_count++;
+        scan_result.length += row_size + pk_length;
+        scan_result.row_count++;
       }else{//없으면 value만 붙이기
-        memcpy(scan_result->data+scan_result->length, row_data, row_size);
-        scan_result->length += row_size;
-        scan_result->row_count++; 
+        memcpy(scan_result.data+scan_result.length, row_data, row_size);
+        scan_result.length += row_size;
+        scan_result.row_count++; 
       }
     } 
 
@@ -309,13 +308,12 @@ void Scan::BlockScan(SstBlockReader* sstBlockReader_, BlockInfo* blockInfo, Snip
 
 void Scan::EnQueueData(Result scan_result, Snippet snippet_){
     if(snippet_.scan_type == Full_Scan_Filter){
-      /*if(scan_result.length != 0){//scan->filter*/ //data length 체크하는거 생략!
+      if(scan_result.length != 0){//scan->filter*/ //data length 체크하는거 생략!
         scan_result.scanned_row_count = scan_result.row_count;
         FilterQueue.push_work(scan_result);        
-      /*}else{//scan->merge
+      }else{//scan->merge
         MergeQueue.push_work(scan_result);
-      }*/
-
+      }
     }else if(snippet_.scan_type == Full_Scan){//scan->merge
       scan_result.scanned_row_count = scan_result.row_count;
       scan_result.filtered_row_count = scan_result.row_count;
@@ -346,10 +344,20 @@ int Scan::getPrimaryKeyData(const char* ikey_data, char* dest, list<PrimaryKey> 
       int key_type = (*piter).key_type;
 
       switch(key_type){
-        case MySQL_INT32:
-        case MySQL_INT64:{
+        case MySQL_INT32:{
           char pk[key_length];
-          pk[0] = 0x00;//ikey[80 00 00 00 00 00 00 01]->ikey[00 00 00 00 00 00 00 01]
+          pk[0] = 0x00;//ikey[81 0C EE 05]->ikey[00 00 00 00 00 00 00 01]
+          for(int i = 0; i < key_length; i++){
+            pk[i] = ikey_data[offset+key_length-i-1];
+            //ikey[00 00 00 00 00 00 00 01]->dest[01 00 00 00 00 00 00 00]
+          }
+          memcpy(dest+pk_length, pk, key_length);
+          pk_length += key_length;
+          offset += key_length;
+          break;
+        }case MySQL_INT64:{
+          char pk[key_length];
+          pk[0] ^= 0x80;//맨 앞 바이트의 맨 앞 비트를 bitwise 해야함!!
           for(int i = 0; i < key_length; i++){
             pk[i] = ikey_data[offset+key_length-i-1];
             //ikey[00 00 00 00 00 00 00 01]->dest[01 00 00 00 00 00 00 00]

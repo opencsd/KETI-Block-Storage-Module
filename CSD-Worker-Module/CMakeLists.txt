@@ -14,6 +14,8 @@ SET(CMAKE_OBJCOPY ${COMPILER_ROOT}objcopy)
 SET(CMAKE_OBJDUMP ${COMPILER_ROOT}objdump)
 SET(CMAKE_RANLIB ${COMPILER_ROOT}ranlib)
 
+#set(CMAKE_EXE_LINKER_FLAGS "-static -static-libgcc -static-libstdc++")
+
 set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
 set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
 set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
@@ -21,17 +23,13 @@ include_directories("${CMAKE_CURRENT_SOURCE_DIR}/rocksdb/include")
 
 add_subdirectory(rocksdb)
 add_executable(main 
-"keti/csd_table_manager.cc"
-"keti/filter.cc"
-"keti/main.cc"
-"keti/merge_manager.cc"
-"keti/return.cc"
-"keti/scan.cc"
-
+    "keti/csd_table_manager.cc"
+    "keti/filter.cc"
+    "keti/main.cc"
+    "keti/merge_manager.cc"
+    "keti/return.cc"
+    "keti/scan.cc"
 )
-target_link_libraries(main
-rocksdb
-pthread
-)
+target_link_libraries(main rocksdb pthread)
 
 

@@ -18,10 +18,10 @@ int Filter::BlockFilter(Result &scanResult)
     unordered_map<string, int> lengthRaw;
     unordered_map<string, int> typedata;
 
-    Result filterresult(scanResult.query_id, scanResult.work_id, scanResult.csd_name, scanResult.total_block_count,
-         scanResult.filter_info, scanResult.storage_engine_port, scanResult.table_total_block_count,
-         scanResult.table_alias, scanResult.column_alias, scanResult.is_debug_mode,
-         scanResult.result_block_count, scanResult.scanned_row_count, scanResult.filtered_row_count);
+    Result filterresult(scanResult.query_id, scanResult.work_id, scanResult.csd_name, scanResult.filter_info,
+        scanResult.storage_engine_port, scanResult.sst_total_block_count, scanResult.csd_total_block_count, 
+        scanResult.table_total_block_count, scanResult.table_alias, scanResult.column_alias, scanResult.is_debug_mode,
+        scanResult.result_block_count, scanResult.scanned_row_count, scanResult.filtered_row_count);
 
     int ColNum = scanResult.filter_info.table_col.size(); //컬럼 넘버로 컬럼의 수를 의미(스니펫을 통해 받은 컬럼의 수)
     int RowNum = scanResult.row_count;             //로우 넘버로 로우의 수를 의미(스캔에서 받은 로우의 수)

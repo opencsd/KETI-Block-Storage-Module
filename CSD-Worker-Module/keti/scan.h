@@ -4,6 +4,7 @@
 #include <iomanip>
 #include <cstdio>
 
+#include "/root/workspace/keti/KETI-Block-Storage-Module/CSD-Worker-Module/rocksdb/include/rocksdb/sst_file_reader.h"
 #include "rocksdb/sst_file_reader.h"
 #include "rocksdb/slice.h"
 #include "rocksdb/iterator.h"
@@ -32,10 +33,10 @@ class Scan{
         
         void Scanning();
         void TableScan(Snippet snippet);
-        void BlockScan(SstBlockReader* sstBlockReader_, BlockInfo* blockInfo, 
-                        Snippet *snippet_, Result *scan_result);
-        void IndexScan(SstBlockReader* sstBlockReader_, BlockInfo* blockInfo, 
-                        Snippet *snippet_, Result *scan_result);
+        void BlockScan(SstBlockReader &sstBlockReader_, BlockInfo &blockInfo, 
+                        Snippet &snippet_, Result &scan_result);
+        void IndexScan(SstBlockReader &sstBlockReader_, BlockInfo &blockInfo, 
+                        Snippet &snippet_, Result &scan_result);
         void EnQueueData(Result scan_result, Snippet snippet_);
         void WalScan(Snippet *snippet_, Result *scan_result);
 
@@ -75,7 +76,8 @@ struct Snippet{
     vector<string> column_alias;//*결과의 컬럼명
     list<BlockInfo> block_info_list;//*스캔 블록 리스트
     int table_total_block_count;//*테이블 전체 블록 수
-    int total_block_count;//sst파일 전체 블록 수
+    int sst_total_block_count;//sst파일 전체 블록 수
+    int csd_total_block_count;//sst파일 전체 블록 수
     unordered_map<string, int> colindexmap;//컬럼의 순서
     list<PrimaryKey> primary_key_list;//테이블 pk 정보 *primary_count 
     uint64_t kNumInternalBytes;//key에 붙는 디폴트값 길이
@@ -98,7 +100,6 @@ struct Snippet{
         bool index_scan = false;
         bool only_scan = true;
 
-        total_block_count = 0;
         Document document;
         document.Parse(json_);
         
@@ -107,7 +108,10 @@ struct Snippet{
         csd_name = document["csdName"].GetString();
         table_name = document["tableName"].GetString();
         table_alias = document["tableAlias"].GetString();
+        csd_total_block_count = document["csdTotalBlockCount"].GetInt();
         table_total_block_count = document["tableTotalBlockCount"].GetInt();
+
+        sst_total_block_count = 0;
         
         int primary_count = document["primaryKey"].GetInt();
         if(primary_count == 0){
@@ -130,15 +134,15 @@ struct Snippet{
                 BlockInfo newBlock(block_id_, block_offset_, block_length_);
                 block_info_list.push_back(newBlock);
                 block_offset_ = block_offset_ + block_length_;
+                sst_total_block_count++;
                 block_id_++;
-                total_block_count++;
                 if(block_length_ > 4096){
                   cout << "block#" << block_id_ <<  " length is over 4096 : " << block_length_ << endl;
                 }
             }
         }   
 
-        BlockCountManager::AddBlockCount(total_block_count);
+        BlockCountManager::AddBlockCount(sst_total_block_count);
 
         //테이블 스키마 정보 저장
         table_col.clear();
