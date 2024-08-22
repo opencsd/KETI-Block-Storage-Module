@@ -1,0 +1,1 @@
+/usr/bin/aarch64-linux-gnu-g++ "CMakeFiles/t-csd-worker-module.dir/main.cc.o" "CMakeFiles/t-csd-worker-module.dir/worker.cc.o" -o t-csd-worker-module  libtmax.a -lpthread 
