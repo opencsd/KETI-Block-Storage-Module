@@ -20,6 +20,7 @@ WorkQueue<Snippet> ScanQueue;
 WorkQueue<Result> FilterQueue;
 WorkQueue<Result> MergeQueue;
 WorkQueue<MergeResult> ReturnQueue;
+IdMap<MergeManager> MergeIdMap;
 
 int main(int argc, char** argv) {
     if (argc >= 2) {
@@ -37,20 +38,28 @@ int main(int argc, char** argv) {
     CSDTableManager::InitCSDTableManager();    
 
     thread InputInterface = thread(&Input::InputSnippet, Input());
+
     // Scan scan = Scan(CSDTableManager);
     // scan.Scanning();
+
     thread ScanLayer = thread(&Scan::Scanning, Scan());
     // thread ScanLayer2 = thread(&Scan::Scanning, Scan());
     // thread ScanLayer3 = thread(&Scan::Scanning, Scan());
     // thread ScanLayer4 = thread(&Scan::Scanning, Scan());
+
     thread FilterLayer = thread(&Filter::Filtering, Filter());
     // thread FilterLayer2 = thread(&Filter::Filtering, Filter());
     // thread FilterLayer3 = thread(&Filter::Filtering, Filter());
     // thread FilterLayer4 = thread(&Filter::Filtering, Filter());
-    thread MergeLayer = thread(&MergeManager::Merging, MergeManager());
-    // thread MergeLayer2 = thread(&MergeManager::Merging, MergeManager());
-    // thread MergeLayer3 = thread(&MergeManager::Merging, MergeManager());
-    // thread MergeLayer4 = thread(&MergeManager::Merging, MergeManager());
+
+    MergeManager* MergeManager1 = new MergeManager();
+    MergeManager* MergeManager2 = new MergeManager();
+    thread MergeLayer1 = thread(&MergeManager::Merging, MergeManager1);
+    thread MergeLayer2 = thread(&MergeManager::Merging, MergeManager2);
+
+    MergeIdMap.insert_merge_manager_pointer(MergeManager1);
+    MergeIdMap.insert_merge_manager_pointer(MergeManager2);
+
     thread ReturnInterface = thread(&Return::ReturnResult, Return());
 
     httplib::Server server;
@@ -74,8 +83,8 @@ int main(int argc, char** argv) {
     // FilterLayer2.join();
     // FilterLayer3.join();
     // FilterLayer4.join();
-    MergeLayer.join();
-    // MergeLayer2.join();
+    MergeLayer1.join();
+    MergeLayer2.join();
     // MergeLayer3.join();
     // MergeLayer4.join();
     ReturnInterface.join();

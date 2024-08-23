@@ -1,4 +1,0 @@
-/root/workspace/keti/KETI-Block-Storage-Module/T-CSD-Worker-Module/build/CMakeFiles/tmax.dir
-/root/workspace/keti/KETI-Block-Storage-Module/T-CSD-Worker-Module/build/CMakeFiles/t-csd-worker-module.dir
-/root/workspace/keti/KETI-Block-Storage-Module/T-CSD-Worker-Module/build/CMakeFiles/edit_cache.dir
-/root/workspace/keti/KETI-Block-Storage-Module/T-CSD-Worker-Module/build/CMakeFiles/rebuild_cache.dir

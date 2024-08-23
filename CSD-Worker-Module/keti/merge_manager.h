@@ -5,12 +5,15 @@
 #include <mutex>
 
 #include "return.h"
+#include "id_map.h"
 
 struct Result;
 struct FilterInfo;
+class MergeManager;
 
 extern WorkQueue<Result> MergeQueue;
 extern WorkQueue<MergeResult> ReturnQueue;
+extern IdMap<MergeManager> MergeIdMap;
 
 struct T{
   string varString;
@@ -21,14 +24,6 @@ struct T{
   int real_size = 0;//소수점 길이//여기추가
 };
 
-typedef std::pair<int, int> pair_key;
-struct pair_hash{
-    template <class T1, class T2>
-    std::size_t operator() (const std::pair<T1, T2> &pair) const{
-        return std::hash<T1>()(pair.first) ^ std::hash<T2>()(pair.second);
-    }
-};
-
 class MergeManager{
 public:
     void Merging();
@@ -36,11 +31,12 @@ public:
 
     inline const static std::string LOGTAG = "CSD Merge Manager";
     char msg[200];
+    int ID;
+
+    void EraseKey(const pair_key key);
 
 private:
     unordered_map<pair_key, MergeResult, pair_hash> m_MergeManager;// key=<qid,wid>
-    static mutex mu;
-    static unordered_map<pair_key, int, pair_hash> m_BlockManager;// key=<qid,wid>
 
     pair<T,int> stack_charToValue(char* dest, int type, int len);
     int stack_valueToChar(char* dest, int dest_type, T value, int type);
@@ -49,7 +45,6 @@ private:
     int calculSubstring(FilterInfo filter_info, char* origin_row_data, int* col_offset, int l, char* dest);
     int calculExtract(FilterInfo filter_info, char* origin_row_data, int* col_offset, int l, char* dest);
     int calculPostfix(vector<string> values, vector<int> types, FilterInfo filter_info, char* origin_row_data, int* col_offset, char* dest, int projection_datatype);
-    void eraseKey(const pair_key key);
 };
 
 

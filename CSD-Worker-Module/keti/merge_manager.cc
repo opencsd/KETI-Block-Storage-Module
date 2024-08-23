@@ -20,6 +20,8 @@ void MergeManager::MergeBlock(Result &result){
             result.storage_engine_port, result.sst_total_block_count, result.csd_total_block_count,
             result.table_total_block_count, result.table_alias, result.column_alias, result.is_debug_mode);
         m_MergeManager[key] = mergeResult;
+
+        MergeIdMap.create_id_block_map(key,result.csd_total_block_count);
     }
 
     //data가 있는 경우만 수행
@@ -110,6 +112,8 @@ void MergeManager::MergeBlock(Result &result){
     m_MergeManager[key].current_block_count += result.result_block_count;
     m_MergeManager[key].result_block_count += result.result_block_count;
 
+    MergeIdMap.count_out_block(key, result.result_block_count);
+
     float temp_size = float(m_MergeManager[key].length) / float(1024);
 
     memset(msg, '\0', sizeof(msg));
@@ -117,18 +121,17 @@ void MergeManager::MergeBlock(Result &result){
     KETILOG::DEBUGLOG(LOGTAG, msg);
 
     //전체 블록 병합이 끝났는지 확인
-    if(m_MergeManager[key].csd_total_block_count == m_MergeManager[key].current_block_count){
-        ReturnQueue.push_work(m_MergeManager[key]);
-
+    if(MergeIdMap.check_work_done(key)){
         memset(msg, '\0', sizeof(msg));
         sprintf(msg,"ID %d-%d :: Done (Block : %d/%d, Size : %.1fK)",result.query_id,result.work_id,m_MergeManager[key].current_block_count,m_MergeManager[key].csd_total_block_count,temp_size);
         KETILOG::DEBUGLOG(LOGTAG, msg);
-
-        m_MergeManager[key].InitMergeResult();
-
-        m_MergeManager.erase(key);
     }
-    
+}
+
+void MergeManager::EraseKey(const pair_key key){
+    ReturnQueue.push_work(m_MergeManager[key]);
+    m_MergeManager[key].InitMergeResult();
+    m_MergeManager.erase(key);
 }
 
 int MergeManager::calculPostfix(vector<string> values, vector<int> types, FilterInfo filter_info, char* origin_row_data, int* col_offset, char* dest, int projection_datatype){
@@ -746,8 +749,4 @@ void MergeManager::getColOffset(const char* origin_row_data, FilterInfo filter_i
 
         col_offset_list[i] = new_col_offset;
     }
-}
-
-void MergeManager::eraseKey(const pair_key key){
-
 }

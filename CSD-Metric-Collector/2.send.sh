@@ -1,6 +1,6 @@
 # 컨테이너 빌드에 필요한 파일들 csd 폴더로 전송
 
-desc="/root/opencsd/csd-metric-collector/"
+desc="/root/opencsd/CSD-Metric-Collector/"
 password="1234"
 
 for((i=1;i<9;i++));

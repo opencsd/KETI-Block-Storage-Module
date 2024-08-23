@@ -1,2 +1,0 @@
-/usr/bin/ar qc libtmax.a "CMakeFiles/tmax.dir/tmax-lib/data_blk.cc.o" "CMakeFiles/tmax.dir/tmax-lib/ex.cc.o"
-/usr/bin/aarch64-linux-gnu-ranlib libtmax.a

@@ -35,14 +35,4 @@ public:
     work.pop();
     return tmp;
   }
-
-  int length(){
-	  int ret;
-	  unique_lock<mutex> lock(work_mutex);
-
-    ret = work.size();
-
-    lock.unlock();
-	  return ret;
-  }
 };
