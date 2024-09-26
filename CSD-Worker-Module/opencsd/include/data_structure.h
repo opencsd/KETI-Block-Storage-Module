@@ -102,12 +102,16 @@ struct Data {
   size_t data_length;
   int row_count;
   int current_block_count;
+  int scanned_row_count;
+  int filtered_row_count;
 
   Data(){
     row_offset.clear();
     data_length = 0;
     row_count = 0;
     current_block_count = 0;
+    scanned_row_count = 0;
+    filtered_row_count = 0;
   }
 
   void clear(){
@@ -124,7 +128,11 @@ struct Result {
   Data data;
 
   Result() : snippet(nullptr) {}
-  Result(shared_ptr<Snippet> snippet_) : snippet(snippet_) {}
+  Result(shared_ptr<Snippet> snippet_, int scanned_row_count = 0, int filtered_row_count = 0)
+   : snippet(snippet_) {
+    data.scanned_row_count = scanned_row_count;
+    data.filtered_row_count = filtered_row_count;
+   }
 };
 
 struct MergeBuffer {
@@ -133,11 +141,11 @@ struct MergeBuffer {
 
   MergeBuffer(){}
 
-  void check_id_buffer(string key){
+  void check_id_buffer(string key, shared_ptr<Snippet> snippet){
     unique_lock<mutex> lock(mu);
 
     if(id_buffer_map.find(key)==id_buffer_map.end()){
-      Result merge_result = Result();
+      Result merge_result = Result(snippet);
       id_buffer_map.insert({key,merge_result});
     }
   }

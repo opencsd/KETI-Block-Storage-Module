@@ -54,11 +54,11 @@ void Return::send_data(Result &result){
     writer.Key("current_block_count");
     writer.Int(result.data.current_block_count);
 
-    // writer.Key("scannedRowCount");
-    // writer.Int(result.scanned_row_count);
+    writer.Key("scanned_row_count");
+    writer.Int(result.data.scanned_row_count);
 
-    // writer.Key("filteredRowCount");
-    // writer.Int(result.filtered_row_count);
+    writer.Key("filtered_row_count");
+    writer.Int(result.data.filtered_row_count);
 
     writer.Key("column_alias");
     writer.StartArray();
@@ -70,7 +70,7 @@ void Return::send_data(Result &result){
     writer.Key("total_block_count");
     writer.Int(result.snippet->result_info.total_block_count);
     
-    writer.Key("tableAlias");
+    writer.Key("table_alias");
     writer.String(result.snippet->result_info.table_alias.c_str());
 
     writer.EndObject();

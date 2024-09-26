@@ -71,6 +71,7 @@ void Scan::data_block_full_scan(shared_ptr<Snippet> snippet){
                     memcpy(scan_result.data.raw_data + scan_result.data.data_length + converted_key.size(), value.data(), value.size());
                     scan_result.data.data_length += converted_key.size() + value.size();
                     scan_result.data.row_count++;
+                    scan_result.data.scanned_row_count++;
                 }else{ // save value only
                     scan_result.data.row_offset.push_back(scan_result.data.data_length);
                     memcpy(scan_result.data.raw_data + scan_result.data.data_length, value.data(), value.size());

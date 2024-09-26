@@ -9,7 +9,7 @@ void Filter::filter_worker(){
 }
 
 void Filter::filtering(Result& result){        
-    Result filter_result(result.snippet);
+    Result filter_result(result.snippet, result.data.scanned_row_count);
 
     vector<int> column_offset_list = result.snippet->schema_info.column_offset;
     
@@ -87,6 +87,7 @@ void Filter::filtering(Result& result){
             memcpy(filter_result.data.raw_data + filter_result.data.data_length, origin_row_data, row_length);
             filter_result.data.data_length += row_length;
             filter_result.data.row_count++;
+            filter_result.data.filtered_row_count++;
         }
     }
     

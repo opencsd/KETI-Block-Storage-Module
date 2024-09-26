@@ -17,9 +17,8 @@ void Projection::projectioning(MergeBuffer* merge_buffer, Result& result){
     string key = make_map_key(result.snippet->query_id, result.snippet->work_id);
 
     //Key에 해당하는 블록버퍼가 없다면 생성
-    int total_block_count = result.snippet->result_info.csd_block_count;
-    make_block_count_map(key, total_block_count);
-    merge_buffer->check_id_buffer(key);
+    make_block_count_map(key, result.snippet->result_info.csd_block_count);
+    merge_buffer->check_id_buffer(key, result.snippet);
 
     //data가 있는 경우만 수행
     if(result.data.row_count != 0){
@@ -77,6 +76,8 @@ void Projection::projectioning(MergeBuffer* merge_buffer, Result& result){
     }
 
     merge_buffer->id_buffer_map[key].data.current_block_count += result.data.current_block_count;
+    merge_buffer->id_buffer_map[key].data.scanned_row_count += result.data.scanned_row_count;
+    merge_buffer->id_buffer_map[key].data.filtered_row_count += result.data.filtered_row_count;
 
     // block_count 내리고 작업 완료 시 release_buffer
     block_count_down_and_release_buffer(key, result.data.current_block_count);
