@@ -38,6 +38,8 @@ int Worker::working(){
 
             res_chunk = csd_filter_and_eval_out(blk, &t_snippet.filter_info_); // scan, filter
 
+            ///*debugg*/for(int t=0; t<res_chunk->res_len; t++){cout<<"key ";printf("%02X ",(u_char)res_chunk->res_buf[t]);}cout << endl;
+
             return_queue_.push_work(*res_chunk);
         }
     }
