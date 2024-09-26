@@ -183,7 +183,9 @@ void Input::parse_snippet(const char* _json){
         for(int i=0; i < _block_info["block"].Size(); i++){
             Block block;
             block.offset = _block_info["block"][i]["offset"].GetInt64();
-            block.length = _block_info["block"][i]["length"].GetInt64();
+            for(int j=0; j < _block_info["block"][i]["length"].Size(); j++){
+                block.length.push_back(_block_info["block"][i]["length"][j].GetInt()) ;
+            }
             parsed_snippet->block_info.block_list.push_back(block);
         }
         

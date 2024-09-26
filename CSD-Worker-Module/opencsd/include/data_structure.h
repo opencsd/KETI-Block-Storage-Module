@@ -53,7 +53,7 @@ struct SchemaInfo {
 
 struct Block {
   int offset;
-  int length;
+  vector<int> length;
 };
 
 struct BlockInfo {
