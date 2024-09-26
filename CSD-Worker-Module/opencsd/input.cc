@@ -207,6 +207,8 @@ void Input::parse_snippet(const char* _json){
         for(int i=0; i < _result_info["column_alias"].Size(); i++){
             parsed_snippet->result_info.column_alias.push_back(_result_info["column_alias"][i].GetString());
         }
+        parsed_snippet->result_info.table_alias = _result_info["total_block_count"].GetString();
+        parsed_snippet->result_info.table_alias = _result_info["csd_block_count"].GetString();
 
         calcul_return_column_type(parsed_snippet);
 

@@ -81,6 +81,8 @@ struct ResultInfo {
   vector<string> column_alias;
   vector<int> return_column_type;
   vector<int> return_column_length;
+  int total_block_count;
+  int csd_block_count;
 };
 
 struct Snippet {
@@ -99,7 +101,6 @@ struct Data {
   vector<int> row_offset;
   size_t data_length;
   int row_count;
-  //*블록 수 관련 정보
   int current_block_count;
 
   Data(){
