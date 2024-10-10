@@ -16,8 +16,9 @@ public:
     }
     
     void scan_worker();
-    void read_block(Result &scan_result, shared_ptr<Snippet> snippet, vector<uint64_t> offset, vector<uint64_t> length, rocksdb::Slice& seek_key, int& left_block_count);
+    void read_data_block(Result &scan_result, shared_ptr<Snippet> snippet, vector<uint64_t> offset, vector<uint64_t> length, rocksdb::Slice& seek_key, int& left_block_count, int& key_index);
     void data_block_full_scan(shared_ptr<Snippet> snippet);
+    void read_index_block(Result &scan_result, shared_ptr<Snippet> snippet, vector<uint64_t> offset, vector<uint64_t> length, rocksdb::Slice& seek_key, int& left_block_count, int& key_index);   
     void data_block_index_scan(shared_ptr<Snippet> snippet);  
     void index_block_scan(shared_ptr<Snippet> snippet);  
     void scan_wal(shared_ptr<Snippet> snippet);
