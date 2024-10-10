@@ -9,7 +9,7 @@ void Filter::filter_worker(){
 }
 
 void Filter::filtering(Result& result){        
-    Result filter_result(result.snippet, result.data.scanned_row_count);
+    Result filter_result(result.snippet, result.data.scanned_row_count, result.data.current_block_count);
 
     vector<int> column_offset_list = result.snippet->schema_info.column_offset;
     
@@ -96,8 +96,8 @@ void Filter::filtering(Result& result){
 }
 
 bool Filter::compare_ge(const char* origin_row_data, SchemaInfo& schema_info, Filtering& filtering, vector<int>& column_offset_list){
-    kValue lv = calcul_operand_value(origin_row_data, schema_info, filtering.lv, column_offset_list, 0);
-    kValue rv = calcul_operand_value(origin_row_data, schema_info, filtering.rv, column_offset_list, 0);
+    kValue lv = calcul_operand_value(origin_row_data, schema_info, filtering.lv, column_offset_list/*, 0*/);
+    kValue rv = calcul_operand_value(origin_row_data, schema_info, filtering.rv, column_offset_list/*, 0*/);
     bool passed = false;
 
     switch(lv.type_){
@@ -137,8 +137,8 @@ bool Filter::compare_ge(const char* origin_row_data, SchemaInfo& schema_info, Fi
 }
 
 bool Filter::compare_le(const char* origin_row_data, SchemaInfo& schema_info, Filtering& filtering, vector<int>& column_offset_list){
-    kValue lv = calcul_operand_value(origin_row_data, schema_info, filtering.lv, column_offset_list, 0);
-    kValue rv = calcul_operand_value(origin_row_data, schema_info, filtering.rv, column_offset_list, 0);
+    kValue lv = calcul_operand_value(origin_row_data, schema_info, filtering.lv, column_offset_list/*, 0*/);
+    kValue rv = calcul_operand_value(origin_row_data, schema_info, filtering.rv, column_offset_list/*, 0*/);
     bool passed = false;
 
     switch(lv.type_){
@@ -178,8 +178,8 @@ bool Filter::compare_le(const char* origin_row_data, SchemaInfo& schema_info, Fi
 }
 
 bool Filter::compare_gt(const char* origin_row_data, SchemaInfo& schema_info, Filtering& filtering, vector<int>& column_offset_list){
-    kValue lv = calcul_operand_value(origin_row_data, schema_info, filtering.lv, column_offset_list, 0);
-    kValue rv = calcul_operand_value(origin_row_data, schema_info, filtering.rv, column_offset_list, 0);
+    kValue lv = calcul_operand_value(origin_row_data, schema_info, filtering.lv, column_offset_list/*, 0*/);
+    kValue rv = calcul_operand_value(origin_row_data, schema_info, filtering.rv, column_offset_list/*, 0*/);
     bool passed = false;
 
     switch(lv.type_){
@@ -219,8 +219,8 @@ bool Filter::compare_gt(const char* origin_row_data, SchemaInfo& schema_info, Fi
 }
 
 bool Filter::compare_lt(const char* origin_row_data, SchemaInfo& schema_info, Filtering& filtering, vector<int>& column_offset_list){
-    kValue lv = calcul_operand_value(origin_row_data, schema_info, filtering.lv, column_offset_list, 0);
-    kValue rv = calcul_operand_value(origin_row_data, schema_info, filtering.rv, column_offset_list, 0);
+    kValue lv = calcul_operand_value(origin_row_data, schema_info, filtering.lv, column_offset_list/*, 0*/);
+    kValue rv = calcul_operand_value(origin_row_data, schema_info, filtering.rv, column_offset_list/*, 0*/);
     bool passed = false;
 
     switch(lv.type_){
@@ -260,8 +260,8 @@ bool Filter::compare_lt(const char* origin_row_data, SchemaInfo& schema_info, Fi
 }
 
 bool Filter::compare_eq(const char* origin_row_data, SchemaInfo& schema_info, Filtering& filtering, vector<int>& column_offset_list){
-    kValue lv = calcul_operand_value(origin_row_data, schema_info, filtering.lv, column_offset_list, 0);
-    kValue rv = calcul_operand_value(origin_row_data, schema_info, filtering.rv, column_offset_list, 0);
+    kValue lv = calcul_operand_value(origin_row_data, schema_info, filtering.lv, column_offset_list/*, 0*/);
+    kValue rv = calcul_operand_value(origin_row_data, schema_info, filtering.rv, column_offset_list/*, 0*/);
     bool passed = false;
 
     switch(lv.type_){
@@ -302,8 +302,8 @@ bool Filter::compare_ne(const char* origin_row_data, SchemaInfo& schema_info, Fi
 }
 
 bool Filter::compare_like(const char* origin_row_data, SchemaInfo& schema_info, Filtering& filtering, vector<int>& column_offset_list){
-    kValue lv = calcul_operand_value(origin_row_data, schema_info, filtering.lv, column_offset_list, 0);
-    kValue rv = calcul_operand_value(origin_row_data, schema_info, filtering.rv, column_offset_list, 0);
+    kValue lv = calcul_operand_value(origin_row_data, schema_info, filtering.lv, column_offset_list/*, 0*/);
+    kValue rv = calcul_operand_value(origin_row_data, schema_info, filtering.rv, column_offset_list/*, 0*/);
     int start_offset = 0;
     bool passed = true;
 
@@ -347,7 +347,7 @@ bool Filter::compare_not_like(const char* origin_row_data, SchemaInfo& schema_in
 }
 
 bool Filter::compare_between(const char* origin_row_data, SchemaInfo& schema_info, Filtering& filtering, vector<int>& column_offset_list){
-    kValue lv = calcul_operand_value(origin_row_data, schema_info, filtering.lv, column_offset_list, 0);
+    kValue lv = calcul_operand_value(origin_row_data, schema_info, filtering.lv, column_offset_list/*, 0*/);
     kValue min = calcul_operand_value(origin_row_data, schema_info, filtering.rv, column_offset_list, 0);
     kValue max = calcul_operand_value(origin_row_data, schema_info, filtering.rv, column_offset_list, 1);
 

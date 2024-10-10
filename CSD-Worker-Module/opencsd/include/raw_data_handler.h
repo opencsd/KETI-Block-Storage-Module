@@ -264,7 +264,7 @@ inline kValue get_column_value(const char* origin_row_data, SchemaInfo& schema_i
     return result;
 } 
 
-inline kValue get_literal_value(const char* origin_row_data, SchemaInfo& schema_info, Operand& operand, vector<int>& column_offset_list, int index){
+inline kValue get_literal_value(const char* origin_row_data, SchemaInfo& schema_info, Operand& operand, vector<int>& column_offset_list, int index = 0){
     kValue result;
 
     switch(operand.types[index]){
@@ -516,19 +516,27 @@ inline kValue get_derived_value(const char* origin_row_data, SchemaInfo& schema_
 }
 
 
-inline kValue calcul_operand_value(const char* origin_row_data, SchemaInfo& schema_info, Operand& operand, vector<int>& column_offset_list, int index = 0){
+inline kValue calcul_operand_value(const char* origin_row_data, SchemaInfo& schema_info, Operand& operand, vector<int>& column_offset_list, int index = -1){
     kValue value;
-    if(operand.types.size() == 1 || index != 0){
+    if(index == -1){
+        if(operand.types.size() == 1){
+            if(operand.types[0] == KETI_VALUE_TYPE::COLUMN){
+                value = get_column_value(origin_row_data, schema_info, operand, column_offset_list);
+            }else{
+                value = get_literal_value(origin_row_data, schema_info, operand, column_offset_list);
+            }
+        }else{
+            if(operand.types[0] == KETI_VALUE_TYPE::OPERATOR){
+                value = get_derived_value(origin_row_data, schema_info, operand, column_offset_list);
+            }else{
+                value = get_postfix_value(origin_row_data, schema_info, operand, column_offset_list);
+            }
+        }
+    }else{
         if(operand.types[index] == KETI_VALUE_TYPE::COLUMN){
             value = get_column_value(origin_row_data, schema_info, operand, column_offset_list, index);
         }else{
             value = get_literal_value(origin_row_data, schema_info, operand, column_offset_list, index);
-        }
-    }else{
-        if(operand.types[0] == KETI_VALUE_TYPE::OPERATOR){
-            value = get_derived_value(origin_row_data, schema_info, operand, column_offset_list);
-        }else{
-            value = get_postfix_value(origin_row_data, schema_info, operand, column_offset_list);
         }
     }
 

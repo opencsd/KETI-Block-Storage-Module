@@ -10,7 +10,6 @@ void Return::return_worker(){
 
 void Return::send_data(Result &result){
     //마지막 블록과 관련한 로그 작업
-
     string json_;
 
     StringBuffer block_buf;
@@ -93,15 +92,19 @@ void Return::send_data(Result &result){
         KETILOG::INFOLOG(LOGTAG, "[error] return interface connection failed");
     } 
     
+    size_t len = strlen(block_buf_.c_str());
+	send(sockfd, &len, sizeof(len), 0);
+    send(sockfd, (char*)block_buf_.c_str(), len, 0);
+
     static char cBuffer[PACKET_SIZE];
     if (recv(sockfd, cBuffer, PACKET_SIZE, 0) == 0){
         KETILOG::FATALLOG(LOGTAG,"client recv Error");
         return;
     };
 
-    // len = result.length;
-    // send(sockfd,&len,sizeof(len),0);
-    // send(sockfd, result.data, BUFF_SIZE, 0);
+    len = result.data.data_length;
+    send(sockfd,&len,sizeof(len),0);
+    send(sockfd, result.data.raw_data, BUFFER_SIZE, 0);
     
     close(sockfd);
 }

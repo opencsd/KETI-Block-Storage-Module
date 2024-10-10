@@ -52,8 +52,8 @@ struct SchemaInfo {
 };
 
 struct Block {
-  int offset;
-  vector<int> length;
+  vector<uint64_t> offset;
+  vector<uint64_t> length;
 };
 
 struct BlockInfo {
@@ -128,10 +128,10 @@ struct Result {
   Data data;
 
   Result() : snippet(nullptr) {}
-  Result(shared_ptr<Snippet> snippet_, int scanned_row_count = 0, int filtered_row_count = 0)
+  Result(shared_ptr<Snippet> snippet_, int scanned_row_count = 0, int current_block_count = 0)
    : snippet(snippet_) {
     data.scanned_row_count = scanned_row_count;
-    data.filtered_row_count = filtered_row_count;
+    data.current_block_count = current_block_count;
    }
 };
 

@@ -43,7 +43,7 @@ void Projection::projectioning(MergeBuffer* merge_buffer, Result& result){
                         int column_length = projection_raw_data(origin_row_data,result.snippet->schema_info, 
                             result.snippet->query_info.projection[j].expression, column_offset_list, projection_row_data, projection_row_length);
                         projection_row_length += column_length;
-                        /*debugg*/cout<<"buffer ";for(int t=0; t<projection_row_length; t++){printf("%02X ",(u_char)projection_row_data[t]);}cout << endl;
+                        // /*debugg*/cout<<"buffer ";for(int t=0; t<projection_row_length; t++){printf("%02X ",(u_char)projection_row_data[t]);}cout << endl;
                         break;
                     }case KETI_SELECT_TYPE::SUM:
                     case KETI_SELECT_TYPE::AVG:
@@ -83,11 +83,11 @@ void Projection::projectioning(MergeBuffer* merge_buffer, Result& result){
     block_count_down_and_release_buffer(key, result.data.current_block_count);
 }
 
-void Projection::make_block_count_map(string key, int total_block_count){
+void Projection::make_block_count_map(string key, int csd_block_count){
     unique_lock<mutex> lock(mu);
 
     if(id_block_count_map_.find(key)==id_block_count_map_.end()){
-        id_block_count_map_[key] = total_block_count;
+        id_block_count_map_[key] = csd_block_count;
     }
 }
 
@@ -98,6 +98,7 @@ void Projection::block_count_down_and_release_buffer(string key, int block_count
         id_block_count_map_[key] = id_block_count_map_[key] - block_count;
 
         if(id_block_count_map_[key] == 0){
+            cout << "block merge done!! " << endl;
             for(auto merge_buffer: merge_buffer_list_){
                 return_layer_->enqueue_return(merge_buffer->id_buffer_map[key]);
                 merge_buffer->release_buffer(key);

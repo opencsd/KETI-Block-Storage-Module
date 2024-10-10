@@ -179,10 +179,13 @@ void Input::parse_snippet(const char* _json){
         parsed_snippet->schema_info.table_index_number = document["schema_info"]["table_index_number"].GetInt();
 
         Value &_block_info = document["block_info"];
+
         parsed_snippet->block_info.partition = _block_info["partition"].GetString();
         for(int i=0; i < _block_info["block"].Size(); i++){
             Block block;
-            block.offset = _block_info["block"][i]["offset"].GetInt64();
+            for(int j=0; j < _block_info["block"][i]["offset"].Size(); j++){
+                block.offset.push_back(stoull(_block_info["block"][i]["offset"][j].GetString()));
+            }
             for(int j=0; j < _block_info["block"][i]["length"].Size(); j++){
                 block.length.push_back(_block_info["block"][i]["length"][j].GetInt()) ;
             }
@@ -207,8 +210,8 @@ void Input::parse_snippet(const char* _json){
         for(int i=0; i < _result_info["column_alias"].Size(); i++){
             parsed_snippet->result_info.column_alias.push_back(_result_info["column_alias"][i].GetString());
         }
-        parsed_snippet->result_info.table_alias = _result_info["total_block_count"].GetInt();
-        parsed_snippet->result_info.table_alias = _result_info["csd_block_count"].GetInt();
+        parsed_snippet->result_info.total_block_count = _result_info["total_block_count"].GetInt();
+        parsed_snippet->result_info.csd_block_count = _result_info["csd_block_count"].GetInt();
 
         calcul_return_column_type(parsed_snippet);
 

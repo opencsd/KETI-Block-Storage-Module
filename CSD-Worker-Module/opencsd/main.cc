@@ -55,11 +55,11 @@ int main(int argc, char** argv) {
     input_layer_thread.join();
     scan_layer_thread1.join();
     // scan_layer_thread2.join();
-    // filter_layer_thread1.join();
+    filter_layer_thread1.join();
     // filter_layer_thread2.join();
-    // merge_layer_thread1.join();
-    // merge_layer_thread2.join();
-    // return_layer_thread.join();
+    projection_layer_thread1.join();
+    // projection_layer_thread2.join();
+    return_layer_thread.join();
 
     return 0;
 }
