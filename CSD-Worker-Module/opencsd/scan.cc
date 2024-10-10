@@ -6,8 +6,6 @@ void Scan::scan_worker(){
     while (1){
         shared_ptr<Snippet> snippet = scan_queue_->wait_and_pop();
 
-        sleep(1);
-
         if(snippet->type == SNIPPET_TYPE::FULL_SCAN){
             data_block_full_scan(snippet);  
         }else if(snippet->type == SNIPPET_TYPE::INDEX_SCAN){
