@@ -174,6 +174,13 @@ inline kValue calcul_equal_operation(kValue lv, kValue rv, string oper, bool not
     if(not_falg){
         result.bool_ = !result.bool_;
     }
+
+    // if(not_falg){
+    //     result.bool_ = !result.bool_;
+    //     cout << lv.string_ << "<>" << rv.string_ << " : " << result.bool_ << endl;
+    // }else{
+    //     cout << lv.string_ << "==" << rv.string_ << " : " << result.bool_ << endl;
+    // }
     
     return result;
 }

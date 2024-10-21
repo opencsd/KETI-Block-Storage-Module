@@ -209,11 +209,11 @@ void Input::parse_snippet(const char* _json){
         parsed_snippet->result_info.table_alias = _result_info["table_alias"].GetString();
         for(int i=0; i < _result_info["column_alias"].Size(); i++){
             parsed_snippet->result_info.column_alias.push_back(_result_info["column_alias"][i].GetString());
+            parsed_snippet->result_info.return_column_type.push_back(_result_info["return_column_type"][i].GetInt());
+            parsed_snippet->result_info.return_column_length.push_back(_result_info["return_column_length"][i].GetInt());
         }
         parsed_snippet->result_info.total_block_count = _result_info["total_block_count"].GetInt();
         parsed_snippet->result_info.csd_block_count = _result_info["csd_block_count"].GetInt();
-
-        calcul_return_column_type(parsed_snippet);
 
         char msg[200];
         memset(msg, '\0', sizeof(msg));
@@ -224,55 +224,4 @@ void Input::parse_snippet(const char* _json){
 
         return;
     }
-}
-
-void Input::calcul_return_column_type(shared_ptr<Snippet> snippet){// *임시tpc-h 쿼리 동작만 수행하도록 작성 => 수정필요
-    unordered_map<string, int> column_type, column_length;
-    for (int i = 0; i < snippet->schema_info.column_name.size(); i++){
-        column_type.insert(make_pair(snippet->schema_info.column_name[i], snippet->schema_info.column_type[i]));
-        column_length.insert(make_pair(snippet->schema_info.column_name[i], snippet->schema_info.column_length[i]));
-    }
-    
-    vector<int> return_datatype, return_offlen;
-    for (int i = 0; i < snippet->query_info.projection.size(); i++){
-        if(snippet->query_info.projection[i].expression.values[0] == "CASE"){
-            return_datatype.push_back(2);
-            return_offlen.push_back(4);
-        }else if(snippet->query_info.projection[i].expression.values[0] == "EXTRACT"){
-            return_datatype.push_back(2);
-            return_offlen.push_back(4);
-        }else if(snippet->query_info.projection[i].expression.values[0] == "SUBSTRING"){
-            return_datatype.push_back(254);
-            return_offlen.push_back(2);
-        }else{
-            if(snippet->query_info.projection[i].expression.values.size() == 1){
-                return_datatype.push_back(column_type[snippet->query_info.projection[i].expression.values[0]]);
-                return_offlen.push_back(column_length[snippet->query_info.projection[i].expression.values[0]]);
-            }else{
-                int multiple_count = 0;
-                for (int j = 0; j < snippet->query_info.projection[i].expression.values.size(); j++){
-                    if(snippet->query_info.projection[i].expression.values[j] == "*"){
-                      if(snippet->query_info.projection[i].expression.values[j-1] == "ps_availqty"){//임시로 작성!!!!
-                        multiple_count--;
-                      }else{
-                        multiple_count++;
-                      }
-                    }
-                }
-                if(multiple_count == 1){
-                    return_datatype.push_back(246);
-                    return_offlen.push_back(8);
-                }else if(multiple_count == 2){
-                    return_datatype.push_back(246);
-                    return_offlen.push_back(9);
-                }else{
-                    return_datatype.push_back(column_type[snippet->query_info.projection[i].expression.values[0]]);
-                    return_offlen.push_back(column_length[snippet->query_info.projection[i].expression.values[0]]);
-                }
-            }
-        }
-    }
-    
-    snippet->result_info.return_column_type = return_datatype;
-    snippet->result_info.return_column_length = return_offlen;
 }

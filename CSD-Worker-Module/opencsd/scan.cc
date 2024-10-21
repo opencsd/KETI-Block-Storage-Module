@@ -89,7 +89,7 @@ void Scan::read_data_block(Result &scan_result, shared_ptr<Snippet> snippet, vec
             const rocksdb::Slice& value = datablock_iter->value();
 
             if(key.keti_get_table_index_number() != snippet->schema_info.table_index_number){ // check table index number
-                scan_result.data.current_block_count = left_block_count;
+                scan_result.data.current_block_count += left_block_count;
                 left_block_count = 0;
                 scan_result.data.row_offset.push_back(scan_result.data.data_length);
                 enqueue_scan_result(scan_result);
@@ -205,7 +205,7 @@ void Scan::data_block_index_scan(shared_ptr<Snippet> snippet){
             */
 
             if(key.keti_get_table_index_number() != snippet->schema_info.table_index_number){ // check table index number
-                // scan_result.data.current_block_count = left_block_count;
+                // scan_result.data.current_block_count += left_block_count;
                 // left_block_count = 0;
                 scan_result.data.row_offset.push_back(scan_result.data.data_length);
                 enqueue_scan_result(scan_result);
