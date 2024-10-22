@@ -5,7 +5,7 @@ void Projection::projection_worker(){
     merge_buffer_list_.push_back(merge_buffer);
 
     while (1){
-        Result result = projection_queue_->wait_and_pop();
+        CsdResult result = projection_queue_->wait_and_pop();
 
         projectioning(merge_buffer, result);
     }
@@ -13,7 +13,7 @@ void Projection::projection_worker(){
     delete merge_buffer;
 }
 
-void Projection::projectioning(MergeBuffer* merge_buffer, Result& result){
+void Projection::projectioning(MergeBuffer* merge_buffer, CsdResult& result){
     string key = make_map_key(result.snippet->query_id, result.snippet->work_id);
 
     //Key에 해당하는 블록버퍼가 없다면 생성
@@ -46,14 +46,13 @@ void Projection::projectioning(MergeBuffer* merge_buffer, Result& result){
                         // /*debugg*/cout<<"buffer ";for(int t=0; t<projection_row_length; t++){printf("%02X ",(u_char)projection_row_data[t]);}cout << endl;
                         break;
                     }case KETI_SELECT_TYPE::SUM:
-                    case KETI_SELECT_TYPE::AVG:
                     case KETI_SELECT_TYPE::COUNT:
                     case KETI_SELECT_TYPE::COUNTSTAR:
-                    case KETI_SELECT_TYPE::COUNTDISTINCT:
                     case KETI_SELECT_TYPE::TOP:
                     case KETI_SELECT_TYPE::MIN:
                     case KETI_SELECT_TYPE::MAX:
                     default:{
+                        // AVG, COUNTDISTINCT cannot offload
                         KETILOG::ERRORLOG(LOGTAG, "@error undefined merge type");
                         break;
                     }
@@ -99,10 +98,13 @@ void Projection::block_count_down_and_release_buffer(string key, int block_count
 
         if(id_block_count_map_[key] == 0){
             cout << "block merge done!! " << endl;
-            for(auto merge_buffer: merge_buffer_list_){
-                return_layer_->enqueue_return(merge_buffer->id_buffer_map[key]);
+            for(const auto& merge_buffer: merge_buffer_list_){
+                if(merge_buffer->id_buffer_map.find(key) != merge_buffer->id_buffer_map.end()){
+                    return_layer_->enqueue_return(merge_buffer->id_buffer_map[key]);
+                }
                 merge_buffer->release_buffer(key);
             }
+            id_block_count_map_.erase(key);
         }
     }
 }

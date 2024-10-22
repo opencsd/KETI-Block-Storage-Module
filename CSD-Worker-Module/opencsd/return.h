@@ -8,7 +8,7 @@ using namespace rapidjson;
 class Return{
 public:
     Return(){
-        this->return_queue_ = new WorkQueue<Result>;
+        this->return_queue_ = new WorkQueue<CsdResult>;
     }
 
     ~Return(){
@@ -16,14 +16,14 @@ public:
     }
 
     void return_worker();
-    void send_data(Result &result);
+    void send_data(CsdResult &result);
 
-    void enqueue_return(Result result){
+    void enqueue_return(CsdResult result){
         return_queue_->push_work(result);
     }
 
 private:
-    WorkQueue<Result>* return_queue_;
+    WorkQueue<CsdResult>* return_queue_;
 
     inline const static std::string LOGTAG = "CSD Return";
     char msg[200];

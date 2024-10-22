@@ -30,13 +30,13 @@ int main(int argc, char** argv) {
     thread input_layer_thread(&Input::input_worker, &input_layer);
     
     thread scan_layer_thread1(&Scan::scan_worker, &scan_layer);
-    // thread scan_layer_thread2(&Scan::scan_worker, &scan_layer);
+    thread scan_layer_thread2(&Scan::scan_worker, &scan_layer);
 
     thread filter_layer_thread1(&Filter::filter_worker, &filter_layer);
-    // thread filter_layer_thread2(&Filter::filter_worker, &filter_layer);
+    thread filter_layer_thread2(&Filter::filter_worker, &filter_layer);
 
     thread projection_layer_thread1(&Projection::projection_worker, &projection_layer);
-    // thread projection_layer_thread2(&Projection::projection_worker, &projection_layer);
+    thread projection_layer_thread2(&Projection::projection_worker, &projection_layer);
 
     thread return_layer_thread(&Return::return_worker, &return_layer);
 
@@ -54,11 +54,11 @@ int main(int argc, char** argv) {
 
     input_layer_thread.join();
     scan_layer_thread1.join();
-    // scan_layer_thread2.join();
+    scan_layer_thread2.join();
     filter_layer_thread1.join();
-    // filter_layer_thread2.join();
+    filter_layer_thread2.join();
     projection_layer_thread1.join();
-    // projection_layer_thread2.join();
+    projection_layer_thread2.join();
     return_layer_thread.join();
 
     return 0;

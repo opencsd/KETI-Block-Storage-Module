@@ -21,7 +21,7 @@ include_directories("${CMAKE_CURRENT_SOURCE_DIR}/rocksdb/include")
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/opencsd/include")
 
 add_subdirectory(rocksdb)
-add_executable(main 
+add_executable(main
 "opencsd/input.cc"
 "opencsd/scan.cc"
 "opencsd/filter.cc"

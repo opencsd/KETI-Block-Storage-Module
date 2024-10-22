@@ -16,7 +16,7 @@ void Scan::scan_worker(){
     }
 }
 
-void Scan::read_data_block(Result &scan_result, shared_ptr<Snippet> snippet, vector<size_t> offset, vector<uint64_t> length, rocksdb::Slice& seek_key, int& left_block_count, int& key_index){
+void Scan::read_data_block(CsdResult &scan_result, shared_ptr<Snippet> snippet, vector<size_t> offset, vector<uint64_t> length, rocksdb::Slice& seek_key, int& left_block_count, int& key_index){
     rocksdb::Options options;
     rocksdb::SstBlockReader sst_block_reader(
         options, false/*blocks_maybe_compressed*/, false/*blocks_definitely_zstd_compressed*/, 
@@ -131,7 +131,7 @@ void Scan::read_data_block(Result &scan_result, shared_ptr<Snippet> snippet, vec
 }
 
 void Scan::data_block_full_scan(shared_ptr<Snippet> snippet){
-    Result scan_result(snippet);
+    CsdResult scan_result(snippet);
     
     char table_index_number[4];
     generate_seek_key(snippet->schema_info, table_index_number);
@@ -172,7 +172,7 @@ void Scan::data_block_index_scan(shared_ptr<Snippet> snippet){
     sst_file_reader.Open("/root/workspace/keti/data_file/tpch1_no_index/tpch_origin_sst/lineitem/A/001400.sst");
     rocksdb::Iterator* datafile_iter = sst_file_reader.NewIterator(rocksdb::ReadOptions());
 
-    Result scan_result(snippet);
+    CsdResult scan_result(snippet);
     int key_index = 0;
 
     for(int i=0; i<snippet->query_info.seek_key.size(); i++){
@@ -227,7 +227,7 @@ void Scan::data_block_index_scan(shared_ptr<Snippet> snippet){
     }
 
     // 실제 블록 read 코드
-    // Result scan_result(snippet);
+    // CsdResult scan_result(snippet);
 
     // int left_block_count = snippet->result_info.csd_block_count;
     // int key_index = 0;
@@ -256,7 +256,7 @@ void Scan::data_block_index_scan(shared_ptr<Snippet> snippet){
     // }
 }
 
-void Scan::read_index_block(Result &scan_result, shared_ptr<Snippet> snippet, vector<size_t> offset, vector<uint64_t> length, rocksdb::Slice& seek_key, int& left_block_count, int& key_index){
+void Scan::read_index_block(CsdResult &scan_result, shared_ptr<Snippet> snippet, vector<size_t> offset, vector<uint64_t> length, rocksdb::Slice& seek_key, int& left_block_count, int& key_index){
     rocksdb::Options options;
     rocksdb::SstBlockReader sst_block_reader(
         options, false/*blocks_maybe_compressed*/, false/*blocks_definitely_zstd_compressed*/, 
@@ -363,7 +363,7 @@ void Scan::read_index_block(Result &scan_result, shared_ptr<Snippet> snippet, ve
 }
 
 void Scan::index_block_scan(shared_ptr<Snippet> snippet){ //*인덱스 테이블 스캔 구현
-    Result scan_result(snippet);
+    CsdResult scan_result(snippet);
 
     int left_block_count = snippet->result_info.csd_block_count;
     
@@ -468,7 +468,7 @@ string Scan::convert_key_to_value(const rocksdb::Slice& key, SchemaInfo& schema_
     return converted_key;
 }
 
-void Scan::enqueue_scan_result(Result scan_result){
+void Scan::enqueue_scan_result(CsdResult scan_result){
     if(scan_result.data.row_count == 0 || scan_result.snippet->query_info.filtering.size() == 0){
         projection_layer_->enqueue_projection(scan_result);
     }else {

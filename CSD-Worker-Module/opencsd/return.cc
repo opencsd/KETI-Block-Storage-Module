@@ -2,13 +2,13 @@
 
 void Return::return_worker(){
     while (1){
-        Result result = return_queue_->wait_and_pop();
+        CsdResult result = return_queue_->wait_and_pop();
 
         send_data(result);        
     }
 }
 
-void Return::send_data(Result &result){
+void Return::send_data(CsdResult &result){
     //마지막 블록과 관련한 로그 작업
     string json_;
 

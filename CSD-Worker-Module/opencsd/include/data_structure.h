@@ -123,12 +123,12 @@ struct Data {
   }
 };
 
-struct Result {
+struct CsdResult {
   shared_ptr<Snippet> snippet;
   Data data;
 
-  Result() : snippet(nullptr) {}
-  Result(shared_ptr<Snippet> snippet_, int scanned_row_count = 0, int current_block_count = 0)
+  CsdResult() : snippet(nullptr) {}
+  CsdResult(shared_ptr<Snippet> snippet_, int scanned_row_count = 0, int current_block_count = 0)
    : snippet(snippet_) {
     data.scanned_row_count = scanned_row_count;
     data.current_block_count = current_block_count;
@@ -136,7 +136,7 @@ struct Result {
 };
 
 struct MergeBuffer {
-  map<string, Result> id_buffer_map;
+  map<string, CsdResult> id_buffer_map;
   mutex mu;
 
   MergeBuffer(){}
@@ -145,17 +145,16 @@ struct MergeBuffer {
     unique_lock<mutex> lock(mu);
 
     if(id_buffer_map.find(key)==id_buffer_map.end()){
-      Result merge_result = Result(snippet);
+      CsdResult merge_result = CsdResult(snippet);
       id_buffer_map.insert({key,merge_result});
     }
   }
 
   void release_buffer(string key){
     unique_lock<mutex> lock(mu);
-
-    auto it = id_buffer_map.find(key);
-    if (it != id_buffer_map.end()) {
-      id_buffer_map.erase(it);
+    
+    if (id_buffer_map.find(key) != id_buffer_map.end()) {
+        id_buffer_map.erase(key);
     }
   }
 };
