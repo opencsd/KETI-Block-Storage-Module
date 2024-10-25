@@ -58,8 +58,10 @@ struct Block {
 
 struct BlockInfo {
   string partition;
+  vector<string> sst_list;
   vector<Block> block_list;
   void clear(){
+    sst_list.clear();
     block_list.clear();
   }
 };

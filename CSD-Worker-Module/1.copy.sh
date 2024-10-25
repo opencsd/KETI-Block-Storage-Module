@@ -14,8 +14,8 @@ if [ "$arg" = "cross" ]; then
     for((i=1;i<9;i++)); 
         do
             ip="10.1.$i.2"
-            echo scp -rp ./build/main root@$ip:$desc/build copying...
-            sshpass -p $password scp -rp -o ConnectTimeout=60 ./build/main root@$ip:$desc/build
+            echo scp -rp ./build/test root@$ip:$desc/build copying...
+            sshpass -p $password scp -rp -o ConnectTimeout=60 ./build/test root@$ip:$desc/build
         done
 else
     for((i=1;i<9;i++)); 

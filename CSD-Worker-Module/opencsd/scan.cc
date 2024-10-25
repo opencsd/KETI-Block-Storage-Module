@@ -10,6 +10,8 @@ void Scan::scan_worker(){
             data_block_index_scan(snippet);
         }else if(snippet->type == SNIPPET_TYPE::INDEX_TABLE_SCAN){
             index_block_scan(snippet);
+        }else if(snippet->type == SNIPPET_TYPE::SST_FILE_SCAN){
+            sst_file_full_scan(snippet);
         }else{
             KETILOG::ERRORLOG(LOGTAG, "@ERROR snippet type is not defined!");
         }       
@@ -29,12 +31,12 @@ void Scan::read_data_block(CsdResult &scan_result, shared_ptr<Snippet> snippet, 
     rocksdb::Iterator* datablock_iter = sst_block_reader.NewIterator(rocksdb::ReadOptions());
 
     if(key_index != -1){
-        for(int current_key_index = key_index; current_key_index < snippet->query_info.seek_key.size(); current_key_index++){
+        while(key_index < snippet->query_info.seek_key.size()){
             // seek_key 설정 필요!!
             /*
                 char table_index_number[4];
                 generate_seek_key(snippet->schema_info, table_index_number);
-                snippet->query_info.seek_key[current_key_index]
+                snippet->query_info.seek_key[key_index]
                 seek_key = table_index_number 4byte + pk nbyte
                 rocksdb::Slice seek_key("",4);
             */
@@ -52,7 +54,7 @@ void Scan::read_data_block(CsdResult &scan_result, shared_ptr<Snippet> snippet, 
             /*
             if(seek success){
                 save data
-                current_key_index++
+                key_index++
             }else{
                 break
             }
@@ -134,7 +136,7 @@ void Scan::data_block_full_scan(shared_ptr<Snippet> snippet){
     CsdResult scan_result(snippet);
     
     char table_index_number[4];
-    generate_seek_key(snippet->schema_info, table_index_number);
+    generate_seek_key(snippet->schema_info.table_index_number, table_index_number);
     rocksdb::Slice seek_key(table_index_number,4);
 
     int left_block_count = snippet->result_info.csd_block_count;
@@ -319,7 +321,7 @@ void Scan::read_index_block(CsdResult &scan_result, shared_ptr<Snippet> snippet,
         }
 
     }else{
-        for (datablock_iter->Seek(seek_key); datablock_iter->Valid(); datablock_iter->Next()) { // seek same table index number block
+        for (datablock_iter->SeekToFirst(); datablock_iter->Valid(); datablock_iter->Next()) { // seek same table index number block
             if (!datablock_iter->status().ok()) {
                 KETILOG::ERRORLOG(LOGTAG, "Error reading the block - Skipped");
                 break;
@@ -369,32 +371,32 @@ void Scan::index_block_scan(shared_ptr<Snippet> snippet){ //*인덱스 테이블
     
     if(snippet->query_info.seek_key.size() == 0){//index table full scan
         char table_index_number[4];
-        generate_seek_key(snippet->schema_info, table_index_number);
+        generate_seek_key(snippet->schema_info.table_index_number, table_index_number);
         rocksdb::Slice seek_key(table_index_number,4);
 
         int key_index = -1;
 
         for(int i=0; i<snippet->block_info.block_list.size(); i++){
-        vector<uint64_t> offset = snippet->block_info.block_list[i].offset;
+            vector<uint64_t> offset = snippet->block_info.block_list[i].offset;
 
-        if(offset.size() == 1){
-            for(int j=0; j<snippet->block_info.block_list[i].length.size(); j++){
+            if(offset.size() == 1){
+                for(int j=0; j<snippet->block_info.block_list[i].length.size(); j++){
+                    vector<uint64_t> length;
+                    length.push_back(snippet->block_info.block_list[i].length[j]);
+
+                    read_index_block(scan_result, snippet, offset, length, seek_key, left_block_count, key_index);
+
+                    offset[0] += length[0];
+                }   
+            }else{
                 vector<uint64_t> length;
-                length.push_back(snippet->block_info.block_list[i].length[j]);
+                for(int j=0; j<snippet->block_info.block_list[i].length.size(); j++){
+                    length.push_back(snippet->block_info.block_list[i].length[j]);
+                }
 
                 read_index_block(scan_result, snippet, offset, length, seek_key, left_block_count, key_index);
-
-                offset[0] += length[0];
-            }   
-        }else{
-            vector<uint64_t> length;
-            for(int j=0; j<snippet->block_info.block_list[i].length.size(); j++){
-                length.push_back(snippet->block_info.block_list[i].length[j]);
             }
-
-            read_index_block(scan_result, snippet, offset, length, seek_key, left_block_count, key_index);
         }
-    }
 
     }else{//index table index scan
         int key_index = 0;
@@ -424,13 +426,94 @@ void Scan::index_block_scan(shared_ptr<Snippet> snippet){ //*인덱스 테이블
     }
 }
 
+void Scan::sst_file_full_scan(shared_ptr<Snippet> snippet){
+    CsdResult scan_result(snippet);
+
+    int left_block_count = snippet->result_info.csd_block_count;
+
+    char table_index_number[4];
+    generate_seek_key(snippet->schema_info.table_index_number, table_index_number);
+    rocksdb::Slice lower_bound_key(table_index_number,4);
+
+    char upper_bound[4];
+    generate_seek_key(snippet->schema_info.table_index_number + 1, upper_bound);
+    rocksdb::Slice upper_bound_key(upper_bound,4);
+
+    for(int i=0; i<snippet->block_info.sst_list.size(); i++){
+        rocksdb::Options options;
+        rocksdb::SstFileReader sst_file_reader(options);
+        string file_path = "/home/ngd/storage/sst/tpch_10_index/" + snippet->block_info.sst_list[i];
+        sst_file_reader.Open(file_path);
+        rocksdb::ReadOptions read_option;
+        read_option.iterate_lower_bound = &lower_bound_key;
+        read_option.iterate_upper_bound= &upper_bound_key;
+        rocksdb::Iterator* datafile_iter = sst_file_reader.NewIterator(read_option);
+
+        for (datafile_iter->SeekToFirst(); datafile_iter->Valid(); datafile_iter->Next()) {
+            if (!datafile_iter->status().ok()) {
+                KETILOG::ERRORLOG(LOGTAG, "Error reading the block - Skipped");
+                break;
+            }    
+
+            const rocksdb::Slice& key = datafile_iter->key();
+            const rocksdb::Slice& value = datafile_iter->value();
+
+            // std::cout << key.ToString(true) << ": " << value.ToString(true) << std::endl;
+
+            if(snippet->schema_info.pk_column.size() != 0){ // append key at front of the value
+                string converted_key = convert_key_to_value(key, snippet->schema_info);
+                int row_length = converted_key.size() + value.size();
+
+                if(scan_result.data.data_length + row_length > BUFFER_SIZE){
+                    scan_result.data.current_block_count += 1;
+                    left_block_count -= 1;
+                    scan_result.data.row_offset.push_back(scan_result.data.data_length);
+                    enqueue_scan_result(scan_result);
+                    scan_result.data.clear();
+                }
+
+                scan_result.data.row_offset.push_back(scan_result.data.data_length);
+                memcpy(scan_result.data.raw_data + scan_result.data.data_length, converted_key.c_str(), converted_key.size());
+                memcpy(scan_result.data.raw_data + scan_result.data.data_length + converted_key.size(), value.data(), value.size());
+                scan_result.data.data_length += row_length;
+                scan_result.data.row_count++;
+                scan_result.data.scanned_row_count++;
+            }else{ // save value only
+                int row_length = value.size();
+
+                if(scan_result.data.data_length + row_length > BUFFER_SIZE){
+                    scan_result.data.current_block_count += 1;
+                    left_block_count -= 1;
+                    scan_result.data.row_offset.push_back(scan_result.data.data_length);
+                    enqueue_scan_result(scan_result);
+                    scan_result.data.clear();
+                }
+
+                scan_result.data.row_offset.push_back(scan_result.data.data_length);
+                memcpy(scan_result.data.raw_data + scan_result.data.data_length, value.data(), value.size());
+                scan_result.data.data_length += row_length;
+                scan_result.data.row_count++;
+                scan_result.data.scanned_row_count++;
+            }
+        }
+    }    
+
+    cout << "scanned row count : " << scan_result.data.scanned_row_count << "(" << snippet->work_id << ")" << endl;
+
+    scan_result.data.current_block_count += left_block_count;
+    left_block_count = 0;
+    scan_result.data.row_offset.push_back(scan_result.data.data_length);
+    enqueue_scan_result(scan_result);
+    scan_result.data.clear();
+}
+
 void Scan::scan_wal(shared_ptr<Snippet> snippet){ //*wal 스캔 동작 구현
     
 }
 
-void Scan::generate_seek_key(SchemaInfo& schema_info, char* table_index_number){
+void Scan::generate_seek_key(int number, char* table_index_number){
     char temp[4];
-    memcpy(temp, &schema_info.table_index_number, sizeof(int));
+    memcpy(temp, &number, sizeof(int));
 
     table_index_number[0] = temp[3];
     table_index_number[1] = temp[2];

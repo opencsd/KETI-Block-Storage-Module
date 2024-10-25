@@ -181,15 +181,22 @@ void Input::parse_snippet(const char* _json){
         Value &_block_info = document["block_info"];
 
         parsed_snippet->block_info.partition = _block_info["partition"].GetString();
-        for(int i=0; i < _block_info["block"].Size(); i++){
-            Block block;
-            for(int j=0; j < _block_info["block"][i]["offset"].Size(); j++){
-                block.offset.push_back(stoull(_block_info["block"][i]["offset"][j].GetString()));
+        if(_block_info.HasMember("block")){
+            for(int i=0; i < _block_info["block"].Size(); i++){
+                Block block;
+                for(int j=0; j < _block_info["block"][i]["offset"].Size(); j++){
+                    block.offset.push_back(stoull(_block_info["block"][i]["offset"][j].GetString()));
+                }
+                for(int j=0; j < _block_info["block"][i]["length"].Size(); j++){
+                    block.length.push_back(_block_info["block"][i]["length"][j].GetInt()) ;
+                }
+                parsed_snippet->block_info.block_list.push_back(block);
             }
-            for(int j=0; j < _block_info["block"][i]["length"].Size(); j++){
-                block.length.push_back(_block_info["block"][i]["length"][j].GetInt()) ;
+        }else{
+            for(int i=0; i < _block_info["sst_list"].Size(); i++){
+                parsed_snippet->block_info.sst_list.push_back(_block_info["sst_list"][i].GetString());
             }
-            parsed_snippet->block_info.block_list.push_back(block);
+            parsed_snippet->type = SNIPPET_TYPE::SST_FILE_SCAN;
         }
         
         if(document.HasMember("wal_info")){

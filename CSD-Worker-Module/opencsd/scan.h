@@ -21,10 +21,11 @@ public:
     void read_index_block(CsdResult &scan_result, shared_ptr<Snippet> snippet, vector<uint64_t> offset, vector<uint64_t> length, rocksdb::Slice& seek_key, int& left_block_count, int& key_index);   
     void data_block_index_scan(shared_ptr<Snippet> snippet);  
     void index_block_scan(shared_ptr<Snippet> snippet);  
+    void sst_file_full_scan(shared_ptr<Snippet> snippet);
     void scan_wal(shared_ptr<Snippet> snippet);
     void enqueue_scan_result(CsdResult scan_result);
     
-    void generate_seek_key(SchemaInfo& schema_info, char* table_index_number);
+    void generate_seek_key(int number, char* table_index_number);
     string convert_key_to_value(const rocksdb::Slice& key, SchemaInfo& schema_info);
 
     void enqueue_scan(shared_ptr<Snippet> snippet){
