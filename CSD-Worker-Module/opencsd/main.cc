@@ -25,9 +25,13 @@ int main(int argc, char** argv) {
     Projection projection_layer(&return_layer);
     Filter filter_layer(&projection_layer);
     Scan scan_layer(&filter_layer, &projection_layer);
-    Input input_layer(&scan_layer);
+    Worker tmax_worker;
+    Input input_layer(&scan_layer, &tmax_worker);
 
     thread input_layer_thread(&Input::input_worker, &input_layer);
+
+    thread tmax_worker_thread(&Worker::tmax_working, &tmax_worker);
+    thread tmax_return_thread(&Worker::tmax_return, &tmax_worker);
     
     thread scan_layer_thread1(&Scan::scan_worker, &scan_layer);
     thread scan_layer_thread2(&Scan::scan_worker, &scan_layer);
@@ -53,6 +57,8 @@ int main(int argc, char** argv) {
     server.stop();
 
     input_layer_thread.join();
+    tmax_worker_thread.join();
+    tmax_return_thread.join();
     scan_layer_thread1.join();
     scan_layer_thread2.join();
     filter_layer_thread1.join();

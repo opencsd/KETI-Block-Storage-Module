@@ -160,7 +160,3 @@ struct MergeBuffer {
     }
   }
 };
-
-struct tSnippet {
-
-};

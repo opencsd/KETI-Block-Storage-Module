@@ -1,6 +1,6 @@
 set(SOURCE_FILES
-    data_blk.c
-    ex.c
+    data_blk.cc
+    ex.cc
 )
 
 # 정적 라이브러리 tmax 생성

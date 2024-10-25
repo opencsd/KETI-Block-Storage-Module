@@ -500,6 +500,8 @@ void Scan::sst_file_full_scan(shared_ptr<Snippet> snippet){
 
     cout << "scanned row count : " << scan_result.data.scanned_row_count << "(" << snippet->work_id << ")" << endl;
 
+    cout << "left_block_count : " << left_block_count << endl;
+
     scan_result.data.current_block_count += left_block_count;
     left_block_count = 0;
     scan_result.data.row_offset.push_back(scan_result.data.data_length);

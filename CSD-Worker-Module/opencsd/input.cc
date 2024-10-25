@@ -82,9 +82,9 @@ void Input::parse_snippet(const char* _json){
     document.Parse(_json);
 
     if(document["type"].GetInt() == SNIPPET_TYPE::TMAX_SNIPPET){
-        tSnippet* parsed_snippet = new tSnippet;
+        shared_ptr<tSnippet> t_snippet = std::make_shared<tSnippet>(_json);
 
-        // tmax_worker_->enqueue_scan(parsed_snippet); // *티맥스 처리 병합
+        tmax_worker_->enqueue_worker(t_snippet); // *티맥스 처리 병합
 
         return;
     }else{

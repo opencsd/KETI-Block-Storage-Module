@@ -19,6 +19,12 @@ set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
 set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/rocksdb/include")
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/opencsd/include")
+include_directories("${CMAKE_CURRENT_SOURCE_DIR}/tmax-lib/include")
+
+add_library(tmax STATIC
+    "${CMAKE_CURRENT_SOURCE_DIR}/tmax-lib/data_blk.cc"
+    "${CMAKE_CURRENT_SOURCE_DIR}/tmax-lib/ex.cc"
+)
 
 add_subdirectory(rocksdb)
 add_executable(test
@@ -28,8 +34,10 @@ add_executable(test
 "opencsd/projection.cc"
 "opencsd/return.cc"
 "opencsd/main.cc"
+"opencsd/worker.cc"
 )
 target_link_libraries(test
 rocksdb
 pthread
+tmax
 )
