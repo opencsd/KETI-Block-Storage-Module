@@ -118,8 +118,8 @@ bool Filter::compare_ge(const char* origin_row_data, SchemaInfo& schema_info, Fi
             ///*debugg*/cout << lv.double_ << " >= " << rv.double_ << " : " << passed << endl;
             break;
         }case KETI_VALUE_TYPE::STRING:{
-            lv.string_ = convert_to_lowercase(lv.string_);
-            rv.string_ = convert_to_lowercase(rv.string_);
+            // lv.string_ = convert_to_lowercase(lv.string_);
+            // rv.string_ = convert_to_lowercase(rv.string_);
             passed = (lv.string_ >= rv.string_) ? true : false;
             ///*debugg*/cout << lv.string_ << " >= " << rv.string_ << " : " << passed << endl;
             break;
@@ -159,8 +159,8 @@ bool Filter::compare_le(const char* origin_row_data, SchemaInfo& schema_info, Fi
             ///*debugg*/cout << lv.double_ << " <= " << rv.double_ << " : " << passed << endl;
             break;
         }case KETI_VALUE_TYPE::STRING:{
-            lv.string_ = convert_to_lowercase(lv.string_);
-            rv.string_ = convert_to_lowercase(rv.string_);
+            // lv.string_ = convert_to_lowercase(lv.string_);
+            // rv.string_ = convert_to_lowercase(rv.string_);
             passed = (lv.string_ <= rv.string_) ? true : false;
             ///*debugg*/cout << lv.string_ << " <= " << rv.string_ << " : " << passed << endl;
             break;
@@ -200,8 +200,8 @@ bool Filter::compare_gt(const char* origin_row_data, SchemaInfo& schema_info, Fi
             ///*debugg*/cout << lv.double_ << " > " << rv.double_ << " : " << passed << endl;
             break;
         }case KETI_VALUE_TYPE::STRING:{
-            lv.string_ = convert_to_lowercase(lv.string_);
-            rv.string_ = convert_to_lowercase(rv.string_);
+            // lv.string_ = convert_to_lowercase(lv.string_);
+            // rv.string_ = convert_to_lowercase(rv.string_);
             passed = (lv.string_ > rv.string_) ? true : false;
             ///*debugg*/cout << lv.string_ << " > " << rv.string_ << " : " << passed << endl;
             break;
@@ -241,8 +241,8 @@ bool Filter::compare_lt(const char* origin_row_data, SchemaInfo& schema_info, Fi
             ///*debugg*/cout << lv.double_ << " < " << rv.double_ << " : " << passed << endl;
             break;
         }case KETI_VALUE_TYPE::STRING:{
-            lv.string_ = convert_to_lowercase(lv.string_);
-            rv.string_ = convert_to_lowercase(rv.string_);
+            // lv.string_ = convert_to_lowercase(lv.string_);
+            // rv.string_ = convert_to_lowercase(rv.string_);
             passed = (lv.string_ < rv.string_) ? true : false;
             ///*debugg*/cout << lv.string_ << " < " << rv.string_ << " : " << passed << endl;
             break;
@@ -283,8 +283,8 @@ bool Filter::compare_eq(const char* origin_row_data, SchemaInfo& schema_info, Fi
             ///*debugg*/cout << lv.double_ << " == " << rv.double_ << " : " << passed << endl;
             break;
         }case KETI_VALUE_TYPE::STRING:{
-            lv.string_ = convert_to_lowercase(lv.string_);
-            rv.string_ = convert_to_lowercase(rv.string_);
+            // lv.string_ = convert_to_lowercase(lv.string_);
+            // rv.string_ = convert_to_lowercase(rv.string_);
             passed = (lv.string_ == rv.string_) ? true : false;
             ///*debugg*/cout << "'" << lv.string_ << "' " << " == '" << rv.string_ << "' : " << passed << endl;
             break;
@@ -307,8 +307,8 @@ bool Filter::compare_like(const char* origin_row_data, SchemaInfo& schema_info, 
     int start_offset = 0;
     bool passed = true;
 
-    lv.string_ = convert_to_lowercase(lv.string_);
-    rv.string_ = convert_to_lowercase(rv.string_);
+    // lv.string_ = convert_to_lowercase(lv.string_);
+    // rv.string_ = convert_to_lowercase(rv.string_);
     
     vector<string> parts = split(rv.string_, '%');
 
@@ -335,9 +335,9 @@ bool Filter::compare_like(const char* origin_row_data, SchemaInfo& schema_info, 
                 passed = false;
             }
         }
+        
+        /*debugg*/cout << "'" << lv.string_ << "' like '" << rv.string_ << "' : " << passed << endl;
     }
-
-    ///*debugg*/cout << "'" << lv.string_ << "' like '" << rv.string_ << "' : " << passed << endl;
 
     return passed;
 }
@@ -397,12 +397,12 @@ bool Filter::compare_in(const char* origin_row_data, SchemaInfo& schema_info, Fi
             ///*debugg*/cout << ") : " << passed << endl;
             break;
         }case KETI_VALUE_TYPE::STRING:{
-            lv.string_ = convert_to_lowercase(lv.string_);
+            // lv.string_ = convert_to_lowercase(lv.string_);
             ///*debugg*/cout << "'" << lv.string_ << "' in ("; 
             for(int i=0; i<filtering.rv.values.size(); i++){
-                string comparator = convert_to_lowercase(filtering.rv.values[i]);
+                // string comparator = convert_to_lowercase(filtering.rv.values[i]);
                 ///*debugg*/cout<< "'" << comparator << "',";
-                if(lv.string_ == comparator){
+                if(lv.string_ == filtering.rv.values[i]){
                     passed = true;
                     break;
                 }

@@ -161,8 +161,8 @@ inline kValue calcul_equal_operation(kValue lv, kValue rv, string oper, bool not
             result.bool_ = (lv.double_ == rv.double_)? true : false;
             break;
         }case KETI_VALUE_TYPE::STRING:{
-            lv.string_ = convert_to_lowercase(lv.string_);
-            rv.string_ = convert_to_lowercase(rv.string_);            
+            // lv.string_ = convert_to_lowercase(lv.string_);
+            // rv.string_ = convert_to_lowercase(rv.string_);   
             result.bool_ = (lv.string_ == rv.string_)? true : false;
             break;
         }default:{
