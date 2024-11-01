@@ -2,6 +2,7 @@
 
 desc="/root/opencsd/CSD-Worker-Module"
 password="1234"
+project="main"
 
 if [ -z "$1" ]; then
   echo "Please provide an argument (cross or copy path):"
@@ -14,8 +15,8 @@ if [ "$arg" = "cross" ]; then
     for((i=1;i<9;i++)); 
         do
             ip="10.1.$i.2"
-            echo scp -rp ./build/test root@$ip:$desc/build copying...
-            sshpass -p $password scp -rp -o ConnectTimeout=60 ./build/test root@$ip:$desc/build
+            echo scp -rp ./build/$project root@$ip:$desc/build copying...
+            sshpass -p $password scp -rp -o ConnectTimeout=60 ./build/$project root@$ip:$desc/build
         done
 else
     for((i=1;i<9;i++)); 

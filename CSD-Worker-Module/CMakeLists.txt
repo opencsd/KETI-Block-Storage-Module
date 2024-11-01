@@ -3,7 +3,9 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 SET(CMAKE_SYSTEM_PROCESSOR aarch64)
 
-project(test C CXX)
+set(project "main")
+
+project(${project} C CXX)
 SET(COMPILER_ROOT /usr/bin/aarch64-linux-gnu-)
 
 SET(CMAKE_C_COMPILER ${COMPILER_ROOT}gcc)
@@ -27,7 +29,7 @@ add_library(tmax STATIC
 )
 
 add_subdirectory(rocksdb)
-add_executable(test
+add_executable(${project}
 "opencsd/input.cc"
 "opencsd/scan.cc"
 "opencsd/filter.cc"
@@ -36,7 +38,7 @@ add_executable(test
 "opencsd/main.cc"
 "opencsd/worker.cc"
 )
-target_link_libraries(test
+target_link_libraries(${project}
 rocksdb
 pthread
 tmax

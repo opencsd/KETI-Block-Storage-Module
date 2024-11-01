@@ -442,7 +442,7 @@ void Scan::sst_file_full_scan(shared_ptr<Snippet> snippet){
     for(int i=0; i<snippet->block_info.sst_list.size(); i++){
         rocksdb::Options options;
         rocksdb::SstFileReader sst_file_reader(options);
-        string file_path = "/home/ngd/storage/sst/tpch_10_index/" + snippet->block_info.sst_list[i];
+        string file_path = "/home/ngd/storage/sst/tpch_100_index/" + snippet->block_info.sst_list[i];
         sst_file_reader.Open(file_path);
         rocksdb::ReadOptions read_option;
         read_option.iterate_lower_bound = &lower_bound_key;
@@ -458,15 +458,13 @@ void Scan::sst_file_full_scan(shared_ptr<Snippet> snippet){
             const rocksdb::Slice& key = datafile_iter->key();
             const rocksdb::Slice& value = datafile_iter->value();
 
-            // std::cout << key.ToString(true) << ": " << value.ToString(true) << std::endl;
-
             if(snippet->schema_info.pk_column.size() != 0){ // append key at front of the value
                 string converted_key = convert_key_to_value(key, snippet->schema_info);
                 int row_length = converted_key.size() + value.size();
 
                 if(scan_result.data.data_length + row_length > BUFFER_SIZE){
-                    scan_result.data.current_block_count += 1;
-                    left_block_count -= 1;
+                    scan_result.data.current_block_count += 100;
+                    left_block_count -= 100;
                     scan_result.data.row_offset.push_back(scan_result.data.data_length);
                     enqueue_scan_result(scan_result);
                     scan_result.data.clear();
@@ -482,8 +480,8 @@ void Scan::sst_file_full_scan(shared_ptr<Snippet> snippet){
                 int row_length = value.size();
 
                 if(scan_result.data.data_length + row_length > BUFFER_SIZE){
-                    scan_result.data.current_block_count += 1;
-                    left_block_count -= 1;
+                    scan_result.data.current_block_count += 100;
+                    left_block_count -= 100;
                     scan_result.data.row_offset.push_back(scan_result.data.data_length);
                     enqueue_scan_result(scan_result);
                     scan_result.data.clear();
@@ -499,8 +497,6 @@ void Scan::sst_file_full_scan(shared_ptr<Snippet> snippet){
     }    
 
     cout << "scanned row count : " << scan_result.data.scanned_row_count << "(" << snippet->work_id << ")" << endl;
-
-    cout << "left_block_count : " << left_block_count << endl;
 
     scan_result.data.current_block_count += left_block_count;
     left_block_count = 0;

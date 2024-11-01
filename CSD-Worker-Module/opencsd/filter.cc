@@ -319,7 +319,7 @@ bool Filter::compare_like(const char* origin_row_data, SchemaInfo& schema_info, 
             passed = false;
             break;
         }else{
-            start_offset += target.size();
+            start_offset += target.size() + offset;
         }
     }
 
@@ -334,10 +334,10 @@ bool Filter::compare_like(const char* origin_row_data, SchemaInfo& schema_info, 
             if(lv.string_.find(parts[parts.size()-1]) != lv.string_.size()-parts[parts.size()-1].size()){
                 passed = false;
             }
-        }
-        
-        /*debugg*/cout << "'" << lv.string_ << "' like '" << rv.string_ << "' : " << passed << endl;
+        }        
     }
+
+    // /*debugg*/cout << "'" << lv.string_ << "' like '" << rv.string_ << "' : " << passed << endl;
 
     return passed;
 }

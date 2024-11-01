@@ -50,6 +50,8 @@ void Return::send_data(CsdResult &result){
     }
     writer.EndArray();
 
+    cout << result.data.current_block_count << endl;
+
     writer.Key("current_block_count");
     writer.Int(result.data.current_block_count);
 
