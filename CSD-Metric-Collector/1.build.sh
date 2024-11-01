@@ -9,4 +9,4 @@
 # fi
 
 # 아키텍쳐에 맞는 컴파일러인지 확인 필수
-aarch64-linux-gnu-g++ -o csd-metric-collector-tcpip-aarch64 csd-metric-collector-tcpip.cc -L/root/workspace/CSD-Metric-Collector/rapidjson -pthread
+aarch64-linux-gnu-g++ -o csd-metric-collector-aarch64 main.cc csd-metric-collector.cc -L/root/workspace/CSD-Metric-Collector/rapidjson -pthread

@@ -4,5 +4,10 @@ FROM ubuntu:18.04
 ARG csd_ip 
 ENV CSD_IP=$csd_ip
 
+ARG host_ip 
+ENV CSD_HOST_SERVER_IP=$host_ip
+
 # 실행 파일을 컨테이너 내부로 복사
-COPY csd-metric-collector-tcpip-aarch64 /csd-metric-collector-tcpip-aarch64
+COPY csd-metric-collector-aarch64 /csd-metric-collector-aarch64
+
+ENTRYPOINT ["/csd-metric-collector-aarch64"]
