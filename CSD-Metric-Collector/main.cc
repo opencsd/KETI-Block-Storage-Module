@@ -38,3 +38,23 @@ CSD Working Block Count: 0
 CSD Metric Score: 89.9496
 connect host server failed
 */
+
+/*
+{
+    "ip": "10.1.1.2",
+    "cpuTotal": 4.0,
+    "cpuUsed": 0.08205128461122513,
+    "cpuUtilization": 2.0512821674346926,
+    "memoryTotal": 6111708,
+    "memoryUsed": 2502884,
+    "memoryUtilization": 40.9522819519043,
+    "storageTotal": 208562268,
+    "storageUsed": 34810856.0,
+    "storageUtilization": 16.69087028503418,
+    "networkRxData": 516,
+    "networkTxData": 1380,
+    "networkBandwidth": 3032,
+    "csdMetricScore": 74.60811691284181,
+    "csdWorkingBlockCount": 0
+}
+*/

@@ -1,11 +1,10 @@
 FROM ubuntu:18.04
 
-#csd_ip => 환경변수 설정
-ARG csd_ip 
-ENV CSD_IP=$csd_ip
+ARG CSD_IP
+ENV CSD_IP=$CSD_IP
 
-ARG host_ip 
-ENV CSD_HOST_SERVER_IP=$host_ip
+ARG CSD_HOST_SERVER_IP
+ENV CSD_HOST_SERVER_IP=$CSD_HOST_SERVER_IP
 
 # 실행 파일을 컨테이너 내부로 복사
 COPY csd-metric-collector-aarch64 /csd-metric-collector-aarch64

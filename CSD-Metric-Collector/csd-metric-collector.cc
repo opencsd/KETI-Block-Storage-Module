@@ -18,7 +18,9 @@ void CsdMetricCollector::run_collect(){
         get_csd_working_block_count();
         calcul_csd_metric_score();
 
-        print_metric();
+        if(getenv("MOD") == "debug"){
+            print_metric();
+        }
 
         send_metric();
 
@@ -55,7 +57,7 @@ void CsdMetricCollector::print_metric(){
 
 void CsdMetricCollector::init_metric(){
     {
-        FILE* fp = popen("grep -c processor /proc/cpuinfo", "r");
+        FILE* fp = popen("grep -c processor /metric/proc/cpuinfo", "r");
         int coreCount;
         
         if (!fp) {
@@ -126,7 +128,7 @@ string CsdMetricCollector::serialize_response(){
     string json_;
 
     StringBuffer block_buf;
-    PrettyWriter<StringBuffer> writer(block_buf);
+    Writer<StringBuffer> writer(block_buf);
 
     writer.StartObject();
 
@@ -134,7 +136,7 @@ string CsdMetricCollector::serialize_response(){
     writer.String(csd_ip_.c_str());
 
     writer.Key("cpuTotal");
-    writer.Double(cpu_.total);
+    writer.Int(static_cast<int>(std::round(cpu_.total)));
     writer.Key("cpuUsed");
     writer.Double(cpu_.used); 
     writer.Key("cpuUtilization");
@@ -147,11 +149,11 @@ string CsdMetricCollector::serialize_response(){
     writer.Key("memoryUtilization");
     writer.Double(memory_.utilization);
 
-    writer.Key("storageTotal");
+    writer.Key("diskTotal");
     writer.Int(storage_.total);
-    writer.Key("storageUsed");
-    writer.Double(storage_.used); 
-    writer.Key("storageUtilization");
+    writer.Key("diskUsed");
+    writer.Int(storage_.used); 
+    writer.Key("diskUtilization");
     writer.Double(storage_.utilization);
 
     writer.Key("networkRxData");
@@ -182,7 +184,12 @@ string CsdMetricCollector::serialize_response(){
 }
 
 void CsdMetricCollector::send_metric(){
+    cout << "send_metric" << endl;
     string jsonStr = serialize_response();
+
+    if(getenv("MOD") == "debug"){
+        cout << jsonStr << endl;
+    }
 
     int sockfd;
     struct sockaddr_in serv_addr;
@@ -229,8 +236,8 @@ void CsdMetricCollector::update_cpu(){
 
     int totalJiffies = diffJiffies.user + diffJiffies.nice + diffJiffies.system + diffJiffies.idle;
 
-    cpu_.utilization = 100.0f * (1.0-(diffJiffies.idle / (double) totalJiffies));
-    cpu_.used = (float)cpu_.total * (1.0-(diffJiffies.idle / (double) totalJiffies));
+    cpu_.utilization = std::round(100.0 * (1.0 - (diffJiffies.idle / static_cast<double>(totalJiffies))) * 100) / 100;
+    cpu_.used = std::round(cpu_.total * (1.0 - (diffJiffies.idle / static_cast<double>(totalJiffies))) * 100) / 100;
     
     cpu_.stJiffies_ = curJiffies;
 }
@@ -256,7 +263,7 @@ void CsdMetricCollector::update_memory(){
     }
     
     memory_.used = memory_.total - memory_.free - memory_.buffers - memory_.cached;
-    memory_.utilization = (1.0 - static_cast<double>(memory_.free + memory_.buffers + memory_.cached) / memory_.total) * 100.0;
+    memory_.utilization = std::round((1.0 - static_cast<double>(memory_.free + memory_.buffers + memory_.cached) / memory_.total) * 100.0 * 100) / 100;
 }
 
 void CsdMetricCollector::update_network(){
@@ -304,7 +311,7 @@ void CsdMetricCollector::update_storage(){
         lineStream >> skip >> storage_.total >> storage_.used >> skip >> skip;
     }
 
-    storage_.utilization = static_cast<float>(storage_.used) / storage_.total * 100;
+    storage_.utilization = std::round(static_cast<float>(storage_.used) / storage_.total * 100 * 100) / 100;
 }
 
 void CsdMetricCollector::update_power(){
@@ -349,7 +356,7 @@ void CsdMetricCollector::calcul_csd_metric_score(){
                         memory_weight_ * (100 - memory_.utilization) +
                         storage_weight_ * (100 - memory_.utilization);
 
-    csd_metric_score_ = totalScore;
+    csd_metric_score_ = std::round(totalScore * 100) / 100;
 }
 
 void CsdMetricCollector::handle_get_csd_metric(const httplib::Request& request, httplib::Response& response){
