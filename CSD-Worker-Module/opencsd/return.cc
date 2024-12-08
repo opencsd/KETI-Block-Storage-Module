@@ -87,7 +87,7 @@ void Return::send_data(CsdResult &result){
     memset(&serv_addr, 0, sizeof(serv_addr));
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_port = htons(BUFF_M_PORT);
-    serv_addr.sin_addr.s_addr = inet_addr(BUFF_M_IP);
+    serv_addr.sin_addr.s_addr = inet_addr(STORAGE_ENGINE_IP);
 
     int response = connect(sockfd,(const sockaddr*)&serv_addr,sizeof(serv_addr));
     if( 0 != response ) {

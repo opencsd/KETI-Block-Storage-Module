@@ -442,7 +442,7 @@ void Scan::sst_file_full_scan(shared_ptr<Snippet> snippet){
     for(int i=0; i<snippet->block_info.sst_list.size(); i++){
         rocksdb::Options options;
         rocksdb::SstFileReader sst_file_reader(options);
-        string file_path = "/home/ngd/storage/sst/tpch_100_index/" + snippet->block_info.sst_list[i];
+        string file_path = "/home/ngd/storage/sst/tpch_origin/" + snippet->block_info.sst_list[i];
         sst_file_reader.Open(file_path);
         rocksdb::ReadOptions read_option;
         read_option.iterate_lower_bound = &lower_bound_key;

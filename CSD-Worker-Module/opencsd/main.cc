@@ -48,8 +48,8 @@ int main(int argc, char** argv) {
     server.Get("/blockcount", BlockCountManager::HandleGetBlockCount);
     server.Get("/log-level", KETILOG::HandleSetLogLevel);
 
-    KETILOG::INFOLOG("CSD Worker Module", "/blockcount & /log-level Host listening on port 40302...\n");
-    server.listen("0.0.0.0", 40302);
+    KETILOG::INFOLOG("CSD Worker Module", "/blockcount & /log-level Host listening on port"+to_string(CSD_WORKER_MODULE_HTTP_PORT)+"\n");
+    server.listen("0.0.0.0", CSD_WORKER_MODULE_HTTP_PORT);
     
     string line;
     getline(cin, line);

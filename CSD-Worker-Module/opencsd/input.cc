@@ -82,9 +82,29 @@ void Input::parse_snippet(const char* _json){
     document.Parse(_json);
 
     if(document["type"].GetInt() == SNIPPET_TYPE::TMAX_SNIPPET){
-        shared_ptr<tSnippet> t_snippet = std::make_shared<tSnippet>(_json);
+        shared_ptr<tSnippet> t_snippet = std::make_shared<tSnippet>();
 
-        tmax_worker_->enqueue_worker(t_snippet); // *티맥스 처리 병합
+        t_snippet->id = document["id"].GetInt();
+        t_snippet->block_size = document["block_size"].GetInt();
+        t_snippet->buffer_size = document["buffer_size"].GetInt();
+        t_snippet->filter_info = document["filter_info"].GetString();
+        t_snippet->file_name = document["file_name"].GetString();
+        
+        t_snippet->chunks.clear();
+        Value &chunk_list = document["chunk_list"];
+        for(int i = 0; i<chunk_list.Size(); i++){
+            chunk chunk;
+            chunk.offset = chunk_list[i]["offset"].GetInt64();
+            chunk.length = chunk_list[i]["length"].GetInt64();
+			t_snippet->chunks.push_back(chunk);
+        }   
+        
+        char msg[50];
+        memset(msg, '\0', sizeof(msg));
+        sprintf(msg,"Receive Tmax Request Snippet {ID : %d}",t_snippet->id);
+        KETILOG::INFOLOG(LOGTAG, msg);
+
+        tmax_worker_->enqueue_worker(t_snippet); 
 
         return;
     }else{

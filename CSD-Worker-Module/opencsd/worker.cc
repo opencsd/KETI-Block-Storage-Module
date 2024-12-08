@@ -1,111 +1,204 @@
+#include <string>
+#include <vector>
+#include <stdexcept>
+
 #include "worker.h"
+
+#define BLOCK_DIR "/home/ngd/storage/tmax/"
+#define CSD_INFO_DIR "/home/ngd/storage/tmax/csd_info.dump"
+
+std::vector<unsigned char> Base64Decode(const std::string& input) {
+    static const int decode_table[128] = {
+        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, // 0-15
+        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, // 16-31
+        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 62, -1, -1, -1, 63, // 32-47 ('+'=62, '/'=63)
+        52, 53, 54, 55, 56, 57, 58, 59, 60, 61, -1, -1, -1,  0, -1, -1, // 48-63 ('0'-'9'=52-61)
+        -1,  0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, // 64-79 ('A'-'Z'=0-25)
+        15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, -1, -1, -1, -1, -1, // 80-95
+        -1, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, // 96-111 ('a'-'z'=26-51)
+        41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, -1, -1, -1, -1, -1  // 112-127
+    };
+
+    std::vector<unsigned char> output;
+    int buffer = 0;
+    int bits_collected = 0;
+
+    for (unsigned char c : input) {
+        if (std::isspace(c)) continue; // Skip whitespace
+        if (c == '=') break;          // Padding
+
+        if (c > 127 || decode_table[c] == -1) {
+            throw std::invalid_argument("Invalid Base64 character");
+        }
+
+        buffer = (buffer << 6) | decode_table[c];
+        bits_collected += 6;
+
+        if (bits_collected >= 8) {
+            bits_collected -= 8;
+            output.push_back(static_cast<unsigned char>((buffer >> bits_collected) & 0xFF));
+        }
+    }
+
+    return output;
+}
 
 void Worker::tmax_working(){
     while (1){
         shared_ptr<tSnippet> t_snippet = work_queue_->wait_and_pop();
-        context_prepare(&t_snippet->filter_info_); // 임의 init
 
-        string block_dir = t_snippet->block_dir_;
+        shared_ptr<result> t_result = std::make_shared<result>(t_snippet->id, t_snippet->buffer_size);
+        
+        string path = BLOCK_DIR + t_snippet->file_name;
 
-        int fd = open(block_dir.c_str(), O_RDONLY); 
+        int fd = open(path.c_str(), O_RDONLY); 
         if (fd < 0){
-            printf("cannot open block file %s\n", block_dir.c_str());
-            return;
+            printf("cannot open block file %s\n", path.c_str());
+            continue;
         }
 
-        for(int i=0; i<t_snippet->chunks_.size(); i++){
-            uint64_t block_dba = t_snippet->chunks_[i].block_dba_;
-            uint64_t block_size = t_snippet->chunks_[i].block_size_;
+        filter_info_t *filter_info;
+        std::vector<unsigned char> decoded_data = Base64Decode(t_snippet->filter_info);
+        uchar* data_ptr = decoded_data.data();
+        filter_info = deserialize_filter_info(&data_ptr);
+        /* [tmax] tibero 서버에서 전달한 constant 값 및 bind parameter 값, compare 정보(GT/LT/GE/LE/EQ), 
+                column info(column여부 및 column index), datatype 정보 deserialize
+                tibero 서버에서 byte stream으로 보낸 filter 정보를 4세부 서버에서 받아 deserialize*/
 
-            char buf[block_size];
+        for(int i=0; i<t_snippet->chunks.size(); i++){
+            uint64_t offset = t_snippet->chunks[i].offset;
+            uint64_t length = t_snippet->chunks[i].length;
 
-            if (read(fd, buf, block_size) != block_size){ 
-                printf("cannot read from block file %s\n", block_dir.c_str());
+            char chunk_buffer[length];
+            int  chunk_idx = 0;
+
+            if (lseek(fd, offset, SEEK_SET) == -1) {
+                perror("lseek failed");
                 close(fd);
-                return;
+                continue;
             }
 
-            close(fd);
+            if (read(fd, chunk_buffer, length) != length){ 
+                printf("cannot read from block file %s\n", path.c_str());
+                close(fd);
+                continue;
+            }
 
             bool pass = true;
-            int tcnum = 0, row_num = 0,col_cnt = 0, out_rows = 0; 
             
-            _blk_t *blk = (_blk_t *)buf;  // get block pointer
-
-            if (table_block_verify(blk, block_dba, block_size) == 0){ // block verify
-                pass = false;
+            _blk_t *blk = (_blk_t *)chunk_buffer;  // get block pointer
+            _dblk_dl_t *dl;
+            dl = dblk_get_dl(blk);
+            if (dl->rowcnt == 0){
+                printf("There is no row in this block %s\n", path.c_str());
+                t_result->chunk_count++;
+                continue;
             }
 
-            res_chunk_t *res_chunk;
+            chunk_list_t *chunk_list;
+	        chunk_list = create_chunk_list();
+            /* [tmax] chunk list를 생성하는 함수
+                    본 함수를 호출 후 csd_filter_and_eval_out 인자로 넘겨줘야 함.
+            */
 
-            res_chunk = csd_filter_and_eval_out(blk, &t_snippet->filter_info_); // scan, filter
+            csd_filter_and_eval_out(blk, filter_info, chunk_list);
+            /* [tmax] 읽어들인 block들에 대해 filtering 및 후처리 작업
+                    deserialize한 filter info와 block 및 chunk_list를 인자로 넘겨줘야 함.
+                    block 들을 iteration하며 block 각각에 대해 본 함수를 호출해야 하며, chunk list는 block들을 iterate 하기 전 create_chunk_list()를 통해 한번만 생성되면 됨.*/
 
-            ///*debugg*/for(int t=0; t<res_chunk->res_len; t++){cout<<"key ";printf("%02X ",(u_char)res_chunk->res_buf[t]);}cout << endl;
-
-            return_queue_->push_work(res_chunk);
+            bool finished = false;
+            while(!finished){
+                finished = write_chunk_list_to_buffer(chunk_list, &t_result->data, t_snippet->buffer_size, &chunk_idx, &t_result->length);
+                /* [tmax] big chunk (통 buffer)에 chunk list 결과 serialize
+                    big chunk size를 넘어갈 경우 어느 chunk까지 썼는지 last_chunk_no 에 기록해두고,
+                    다시 함수 들어왔을 때 이어서 쓸 수 있도록 함. */
+                // chunk list에 포함된 여러 개의 chunk data(big chunk)를 하나의 큰 버퍼에 이어 붙임
+                // chunk list와 big chunk, big chunk의 크기를 인자로 넘겨줌
+                // buffer_length에 big chunk에 쓴 총 길이를 업데이트
+                // big chunk가 다 찼을 경우, 현재 읽고 있는 index 위치를 current_chunk_idx에 저장하고 return false
+                if (!finished) {
+                    enqueue_return(t_result);
+                    t_result->init_result(t_snippet->buffer_size);
+                }
+            }
+            
+            t_result->chunk_count++;
         }
+
+        close(fd);
+        
+        t_result->last = true;
+
+        char msg[50];
+        memset(msg, '\0', sizeof(msg));
+        sprintf(msg,"Complete Tmax Work {ID : %d}",t_snippet->id);
+        KETILOG::INFOLOG("T", msg);
+
+        enqueue_return(t_result);
     }
 }
 
 void Worker::tmax_return(){
     while (1){
-        res_chunk_t* res_chunk_t = return_queue_->wait_and_pop();
+        shared_ptr<result> result = return_queue_->wait_and_pop();
+
+        string json_;
+
+        StringBuffer block_buf;
+        PrettyWriter<StringBuffer> writer(block_buf);
+
+        writer.StartObject();
+
+        writer.Key("id");
+        writer.Int(result->id);
+
+        writer.Key("length");
+        writer.Int(result->length);
+
+        writer.Key("chunk_count");
+        writer.Int(result->chunk_count);
+
+        writer.Key("is_last");
+        writer.Bool(result->last);
+
+        writer.EndObject();
+
+        string block_buf_ = block_buf.GetString();
+
+        // cout << block_buf_ << endl;
+        // /*debugg*/for(int t=0; t<result->length; t++){printf("%02X ",(u_char)result->data[t]);}cout << endl;
+
         int sockfd;
         struct sockaddr_in serv_addr;
         sockfd = socket(PF_INET, SOCK_STREAM, 0);
         if (sockfd < 0) {
             perror("ERROR opening socket");
         }
+        
         memset(&serv_addr, 0, sizeof(serv_addr));
         serv_addr.sin_family = AF_INET;
         serv_addr.sin_port = htons(T_SE_MERGING_TCP_PORT);
-
-        if (inet_pton(AF_INET, "10.0.4.80", &serv_addr.sin_addr) <= 0) {
-            perror("ERROR invalid IP address");
-            close(sockfd);
-            continue; // Skip to the next iteration of the loop
-        }
+        serv_addr.sin_addr.s_addr = inet_addr(STORAGE_ENGINE_IP);
 
         int response = connect(sockfd,(const sockaddr*)&serv_addr,sizeof(serv_addr));
         if( 0 != response ) {
             cout << "ERROR return interface connection failed" << endl;
-        } 
+        }
 
-        send(sockfd, &res_chunk_t->res_len, sizeof(int), 0);
-        send(sockfd, &res_chunk_t->res_buf, res_chunk_t->res_len, 0);
+        size_t len = strlen(block_buf_.c_str());
+        send(sockfd, &len, sizeof(len), 0);
+        send(sockfd, (char*)block_buf_.c_str(), len, 0);
+
+        static char cBuffer[PACKET_SIZE];
+        if (recv(sockfd, cBuffer, PACKET_SIZE, 0) == 0){
+            perror("ERROR invalid IP address");
+            continue;
+        };
+
+        size_t size_length = static_cast<size_t>(result->length);
+        send(sockfd, &size_length, sizeof(size_length), 0);
+        send(sockfd, result->data, result->length, 0);
         
         close(sockfd);
     }    
 }
-
-static void context_prepare(/*exp_ctx_t *exp_ctx, */filter_info_t *filter_info) // [K] exp_ctx, filter_info 정보를 채우는 함수 -> 해당 정보를 위에서 전달받아야 할듯
-{
-	int col_cnt = 6;		// c0 - c5 // [K] 하드코딩값 -> 전달 받을 정보
-	int exp_cnt = 1;		// >= 6789 // [K] 하드코딩값 -> 전달 받을 정보
-
-  	// expression context initialize
-	// exp_ctx->column_vals = (uchar **)malloc(sizeof(uchar *) * col_cnt); // [K] 컬럼 개수만큼 공간 마련
-
-	// filter info initialize
-	filter_info->exp_cnt = exp_cnt; 
-	filter_info->col_cnt = col_cnt;
-
-		// operation GE (>=)
-	filter_info->op_types =
-					 (exp_op_type_t *)malloc(sizeof(exp_op_type_t));
-	filter_info->op_types[0] = EXP_OP_GE;// [K] operator 지정
-
-		// column (c0)
-	filter_info->exp_l_nos = (int16_t *)malloc(sizeof(int16_t));// [K] left value
-	filter_info->exp_l_nos[0] = 0; // [K] 하드코딩값 -> 전달 받을 정보
-		// contant value (6789)
-	filter_info->exp_r_nos = (int16_t *)malloc(sizeof(int16_t));// [K] right value
-	filter_info->exp_r_nos[0] = -1; // [K] 하드코딩값 -> 전달 받을 정보
-	filter_info->const_vals_cnt = 1; // [K] 하드코딩값 -> 전달 받을 정보
-	filter_info->const_vals = (uchar **)malloc(sizeof(uchar *));
-	filter_info->const_vals[0] = (uchar *)malloc(sizeof(uchar) * 3);
-	filter_info->const_vals[0][0] = 3; // [K] 하드코딩값 -> 전달 받을 정보
-	filter_info->const_vals[0][1] = 195; // [K] 하드코딩값 -> 전달 받을 정보
-	filter_info->const_vals[0][2] = 194; // [K] 하드코딩값 -> 전달 받을 정보
-} 
-
