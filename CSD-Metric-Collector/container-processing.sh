@@ -22,4 +22,6 @@ fi
 docker build -t csd-metric-collector --build-arg CSD_IP=$inet_address --build-arg CSD_HOST_SERVER_IP=$CSD_HOST_SERVER_IP .
 
 # 3.컨테이너 실행 
-docker run -d -it --privileged --name csd-metric-collector -e MOD=$1 -v /proc:/metric/proc -v /sys/class/net/ngdtap0/statistics:/metric/net csd-metric-collector 
+docker run -d -it --privileged --name csd-metric-collector \
+    -e MOD=$1 \
+    -v /proc:/metric/proc -v /sys/class/net/ngdtap0/statistics:/metric/net csd-metric-collector 
