@@ -46,8 +46,9 @@ std::vector<unsigned char> Base64Decode(const std::string& input) {
 void Worker::tmax_working(){
     while (1){
         shared_ptr<tSnippet> t_snippet = work_queue_->wait_and_pop();
+        MonitoringManager::T_AddWorkingId(t_snippet->id);
 
-        shared_ptr<result> t_result = std::make_shared<result>(t_snippet->id, t_snippet->buffer_size);
+        result t_result = result(t_snippet->id, t_snippet->buffer_size);
         
         string path = BLOCK_DIR + t_snippet->file_name;
 
@@ -91,7 +92,7 @@ void Worker::tmax_working(){
             dl = dblk_get_dl(blk);
             if (dl->rowcnt == 0){
                 printf("There is no row in this block %s\n", path.c_str());
-                t_result->chunk_count++;
+                t_result.chunk_count++;
                 continue;
             }
 
@@ -105,10 +106,10 @@ void Worker::tmax_working(){
             /* [tmax] 읽어들인 block들에 대해 filtering 및 후처리 작업
                     deserialize한 filter info와 block 및 chunk_list를 인자로 넘겨줘야 함.
                     block 들을 iteration하며 block 각각에 대해 본 함수를 호출해야 하며, chunk list는 block들을 iterate 하기 전 create_chunk_list()를 통해 한번만 생성되면 됨.*/
-
+            
             bool finished = false;
             while(!finished){
-                finished = write_chunk_list_to_buffer(chunk_list, &t_result->data, t_snippet->buffer_size, &chunk_idx, &t_result->length);
+                finished = write_chunk_list_to_buffer(chunk_list, &t_result.data, t_snippet->buffer_size, &chunk_idx, &t_result.length);
                 /* [tmax] big chunk (통 buffer)에 chunk list 결과 serialize
                     big chunk size를 넘어갈 경우 어느 chunk까지 썼는지 last_chunk_no 에 기록해두고,
                     다시 함수 들어왔을 때 이어서 쓸 수 있도록 함. */
@@ -117,30 +118,31 @@ void Worker::tmax_working(){
                 // buffer_length에 big chunk에 쓴 총 길이를 업데이트
                 // big chunk가 다 찼을 경우, 현재 읽고 있는 index 위치를 current_chunk_idx에 저장하고 return false
                 if (!finished) {
+                    MonitoringManager::T_AddBlockCount(t_result.chunk_count);
                     enqueue_return(t_result);
-                    t_result->init_result(t_snippet->buffer_size);
+                    t_result.init_result(t_snippet->buffer_size);
                 }
             }
             
-            t_result->chunk_count++;
+            t_result.chunk_count++;
         }
 
         close(fd);
-        
-        t_result->last = true;
 
         char msg[50];
         memset(msg, '\0', sizeof(msg));
         sprintf(msg,"Complete Tmax Work {ID : %d}",t_snippet->id);
         KETILOG::INFOLOG("T", msg);
 
+        MonitoringManager::T_AddBlockCount(t_result.chunk_count);
+        MonitoringManager::T_RemoveWorkingId(t_snippet->id);
         enqueue_return(t_result);
     }
 }
 
 void Worker::tmax_return(){
     while (1){
-        shared_ptr<result> result = return_queue_->wait_and_pop();
+        auto result = return_queue_->wait_and_pop();
 
         string json_;
 
@@ -158,15 +160,13 @@ void Worker::tmax_return(){
         writer.Key("chunk_count");
         writer.Int(result->chunk_count);
 
-        writer.Key("is_last");
-        writer.Bool(result->last);
-
         writer.EndObject();
 
         string block_buf_ = block_buf.GetString();
-
-        // cout << block_buf_ << endl;
-        // /*debugg*/for(int t=0; t<result->length; t++){printf("%02X ",(u_char)result->data[t]);}cout << endl;
+        
+        if(KETILOG::IsLogLevelUnder(TRACE)){
+            cout << block_buf_ << endl;
+        }
 
         int sockfd;
         struct sockaddr_in serv_addr;

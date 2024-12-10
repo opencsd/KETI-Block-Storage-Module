@@ -22,8 +22,8 @@ fi
 docker build -t csd-worker-module --build-arg CSD_IP=$inet_address --build-arg CSD_HOST_SERVER_IP=$CSD_HOST_SERVER_IP .
 
 # 3.컨테이너 실행 
-docker run -d -it --privileged -p 40302:40302 -p 40301:40301 \
+docker run -d -it --restart=always --privileged -p 40302:40302 -p 40301:40301 \
     -v /home/ngd/storage:/home/ngd/storage \
-    -e MOD=$1 -e STORAGE_ENGINE_HOST_SERVER_IP=$STORAGE_ENGINE_HOST_SERVER_IP \
+    -e LOG_LEVEL=$1 -e STORAGE_ENGINE_HOST_SERVER_IP=$STORAGE_ENGINE_HOST_SERVER_IP \
     --name csd-worker-module csd-worker-module 
     

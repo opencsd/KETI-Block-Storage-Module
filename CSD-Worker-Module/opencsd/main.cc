@@ -9,7 +9,7 @@
 using namespace std;
 
 int main(int argc, char** argv) {
-    if (argc >= 2) {
+    if (argc >= 2){
         KETILOG::SetLogLevel(stoi(argv[1]));
     }else{
         KETILOG::SetDefaultLogLevel();
@@ -45,7 +45,8 @@ int main(int argc, char** argv) {
     thread return_layer_thread(&Return::return_worker, &return_layer);
 
     httplib::Server server;
-    server.Get("/blockcount", BlockCountManager::HandleGetBlockCount);
+    server.Get("/tmax/monitoring", MonitoringManager::T_HandleGetMonitoring);
+    server.Get("/blockcount", MonitoringManager::HandleGetBlockCount);
     server.Get("/log-level", KETILOG::HandleSetLogLevel);
 
     KETILOG::INFOLOG("CSD Worker Module", "/blockcount & /log-level Host listening on port"+to_string(CSD_WORKER_MODULE_HTTP_PORT)+"\n");

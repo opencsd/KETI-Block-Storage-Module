@@ -3,6 +3,7 @@
 desc="/root/opencsd/CSD-Worker-Module"
 password="1234"
 project="csd-worker-module"
+ip="220.94.140.246"
 
 if [ -z "$1" ]; then
   echo "Please provide an argument (cross or copy path):"
@@ -28,7 +29,7 @@ if [ "$2" = "" ]; then
             done
     fi
 else
-    echo scp -rp container-processing.sh dockerfile ./build/$project root@10.0.4.84:/root/workspace/keti/CSD-Worker-Module copying...
-    sshpass -p ketidbms! scp -rp -o ConnectTimeout=60 container-processing.sh dockerfile ./build/$project root@10.0.4.84:/root/workspace/keti/CSD-Worker-Module
+    echo scp -rp container-processing.sh dockerfile ./build/$project root@$ip:/root/workspace/keti/CSD-Worker-Module copying...
+    sshpass -p ketidbms! scp -rp -o ConnectTimeout=60 container-processing.sh dockerfile ./build/$project root@$ip:/root/workspace/keti/CSD-Worker-Module
 fi
 

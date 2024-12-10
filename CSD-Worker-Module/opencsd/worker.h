@@ -3,8 +3,8 @@
 #include "return.h"
 #include "data_structure.h"
 #include "tb_block.h" // tmax library
-
-static void context_prepare(/*exp_ctx_t *exp_ctx, */filter_info_t *filter_info);
+#include "keti_log.h"
+#include "monitoring_manager.h"
 
 #define TPRINTF(tcnum, tctag, ...)\
 	printf("[TEST CASE %d] %s | ", tcnum, tctag);\
@@ -22,13 +22,36 @@ struct result{
     bool last;
     int chunk_count;
 
-    result(int id_, int buffer_size_){
+    result(int id_, int buffer_size_) {
         this->data = new uchar[buffer_size_];
         this->id = id_;
         this->length = 0;
         this->last = false;
         this->chunk_count = 0;
     }
+
+    result(const result& other) {
+        this->id = other.id;
+        this->length = other.length;
+        this->last = other.last;
+        this->chunk_count = other.chunk_count;
+        this->data = new uchar[other.length];
+        std::copy(other.data, other.data + other.length, this->data);
+    }
+
+    result& operator=(const result& other) {
+        if (this != &other) {
+            delete[] this->data;
+            this->id = other.id;
+            this->length = other.length;
+            this->last = other.last;
+            this->chunk_count = other.chunk_count;
+            this->data = new uchar[other.length];
+            std::copy(other.data, other.data + other.length, this->data);
+        }
+        return *this;
+    }
+
     ~result() {
         delete[] data;
     }
@@ -53,7 +76,7 @@ class Worker{
     public:
         Worker(){
             this->work_queue_ = new WorkQueue<shared_ptr<tSnippet>>;
-            this->return_queue_ = new WorkQueue<shared_ptr<result>>;
+            this->return_queue_ = new WorkQueue<std::shared_ptr<result>>;
         }
         void tmax_working();
         void tmax_return();
@@ -67,11 +90,11 @@ class Worker{
             work_queue_->push_work(snippet);
         }
 
-        void enqueue_return(shared_ptr<result> result){
-            return_queue_->push_work(result);
+        void enqueue_return(const result& result_obj) {
+            return_queue_->push_work(std::make_shared<result>(result_obj));
         }
 
     private:
         WorkQueue<shared_ptr<tSnippet>>* work_queue_;
-        WorkQueue<shared_ptr<result>>* return_queue_;
+        WorkQueue<std::shared_ptr<result>>* return_queue_;
 };
