@@ -118,12 +118,14 @@ void Worker::tmax_working(){
                 // buffer_length에 big chunk에 쓴 총 길이를 업데이트
                 // big chunk가 다 찼을 경우, 현재 읽고 있는 index 위치를 current_chunk_idx에 저장하고 return false
                 if (!finished) {
-                    MonitoringManager::T_AddBlockCount(t_result.chunk_count);
+                    cout << t_snippet->id << " return result " << endl;
                     enqueue_return(t_result);
                     t_result.init_result(t_snippet->buffer_size);
+                    sleep(5);
                 }
             }
             
+            MonitoringManager::T_AddBlockCount(t_result.chunk_count);
             t_result.chunk_count++;
         }
 

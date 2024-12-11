@@ -30,7 +30,8 @@ int main(int argc, char** argv) {
 
     thread input_layer_thread(&Input::input_worker, &input_layer);
 
-    thread tmax_worker_thread(&Worker::tmax_working, &tmax_worker);
+    thread tmax_worker_thread1(&Worker::tmax_working, &tmax_worker);
+    thread tmax_worker_thread2(&Worker::tmax_working, &tmax_worker);
     thread tmax_return_thread(&Worker::tmax_return, &tmax_worker);
     
     thread scan_layer_thread1(&Scan::scan_worker, &scan_layer);
@@ -58,7 +59,8 @@ int main(int argc, char** argv) {
     server.stop();
 
     input_layer_thread.join();
-    tmax_worker_thread.join();
+    tmax_worker_thread1.join();
+    tmax_worker_thread2.join();
     tmax_return_thread.join();
     scan_layer_thread1.join();
     scan_layer_thread2.join();
