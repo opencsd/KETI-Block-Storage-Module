@@ -3,7 +3,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 SET(CMAKE_SYSTEM_PROCESSOR aarch64)
 
-set(project "local")
+set(project "csd-worker-module")
 
 project(${project} C CXX)
 SET(COMPILER_ROOT /usr/bin/aarch64-linux-gnu-)
