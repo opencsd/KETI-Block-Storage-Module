@@ -3,7 +3,7 @@
 void Scan::scan_worker(){
     while (1){
         shared_ptr<Snippet> snippet = scan_queue_->wait_and_pop();
-
+        
         if(snippet->type == SNIPPET_TYPE::FULL_SCAN){
             data_block_full_scan(snippet);  
         }else if(snippet->type == SNIPPET_TYPE::INDEX_SCAN){
@@ -430,6 +430,7 @@ void Scan::sst_file_full_scan(shared_ptr<Snippet> snippet){
     CsdResult scan_result(snippet);
 
     int left_block_count = snippet->result_info.csd_block_count;
+    int total_scanned_row_count = 0;
 
     char table_index_number[4];
     generate_seek_key(snippet->schema_info.table_index_number, table_index_number);
@@ -442,7 +443,7 @@ void Scan::sst_file_full_scan(shared_ptr<Snippet> snippet){
     for(int i=0; i<snippet->block_info.sst_list.size(); i++){
         rocksdb::Options options;
         rocksdb::SstFileReader sst_file_reader(options);
-        string file_path = "/home/ngd/storage/sst/tpch_origin/" + snippet->block_info.sst_list[i];
+        string file_path = "/home/ngd/storage/keti-opencsd-origin/" + snippet->block_info.sst_list[i];
         sst_file_reader.Open(file_path);
         rocksdb::ReadOptions read_option;
         read_option.iterate_lower_bound = &lower_bound_key;
@@ -476,6 +477,7 @@ void Scan::sst_file_full_scan(shared_ptr<Snippet> snippet){
                 scan_result.data.data_length += row_length;
                 scan_result.data.row_count++;
                 scan_result.data.scanned_row_count++;
+                total_scanned_row_count++;
             }else{ // save value only
                 int row_length = value.size();
 
@@ -492,11 +494,12 @@ void Scan::sst_file_full_scan(shared_ptr<Snippet> snippet){
                 scan_result.data.data_length += row_length;
                 scan_result.data.row_count++;
                 scan_result.data.scanned_row_count++;
+                total_scanned_row_count++;
             }
         }
     }    
 
-    cout << "scanned row count : " << scan_result.data.scanned_row_count << "(" << snippet->work_id << ")" << endl;
+    cout << "total scanned row count : " << total_scanned_row_count << "(" << snippet->work_id << ")" << endl;
 
     scan_result.data.current_block_count += left_block_count;
     left_block_count = 0;
@@ -551,6 +554,7 @@ string Scan::convert_key_to_value(const rocksdb::Slice& key, SchemaInfo& schema_
 
 void Scan::enqueue_scan_result(CsdResult scan_result){
     if(scan_result.data.row_count == 0 || scan_result.snippet->query_info.filtering.size() == 0){
+        scan_result.data.filtered_row_count = scan_result.data.scanned_row_count;
         projection_layer_->enqueue_projection(scan_result);
     }else {
         filter_layer_->enqueue_filter(scan_result);

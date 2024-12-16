@@ -9,7 +9,7 @@ void Filter::filter_worker(){
 }
 
 void Filter::filtering(CsdResult& result){        
-    CsdResult filter_result(result.snippet, result.data.scanned_row_count, result.data.current_block_count);
+    CsdResult filter_result(result.snippet, result.data.scanned_row_count, 0, result.data.current_block_count);
 
     vector<int> column_offset_list = result.snippet->schema_info.column_offset;
     

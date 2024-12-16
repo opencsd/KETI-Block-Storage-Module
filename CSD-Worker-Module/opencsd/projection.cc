@@ -61,6 +61,7 @@ void Projection::projectioning(MergeBuffer* merge_buffer, CsdResult& result){
 
             //row 추가 시 버퍼 크기 넘는지 확인 
             if(merge_buffer->id_buffer_map[key].data.data_length + projection_row_length > BUFFER_SIZE){
+                cout << "enquque " << result.snippet->work_id << " " << result.data.current_block_count << endl;
                 return_layer_->enqueue_return(merge_buffer->id_buffer_map[key]);
                 merge_buffer->id_buffer_map[key].data.clear();
             }
@@ -86,6 +87,7 @@ void Projection::make_block_count_map(string key, int csd_block_count){
     unique_lock<mutex> lock(mu);
 
     if(id_block_count_map_.find(key)==id_block_count_map_.end()){
+        cout << "make block count map " << key << endl;
         id_block_count_map_[key] = csd_block_count;
     }
 }
@@ -97,14 +99,21 @@ void Projection::block_count_down_and_release_buffer(string key, int block_count
         id_block_count_map_[key] = id_block_count_map_[key] - block_count;
 
         if(id_block_count_map_[key] == 0){
-            cout << "block merge done!! " << endl;
+            char msg[30];
+            memset(msg, '\0', sizeof(msg));
+            sprintf(msg,"Snippet Work {ID : %s} Done",key.c_str());
+            KETILOG::INFOLOG(LOGTAG, msg);
+
+            int i=0;
             for(const auto& merge_buffer: merge_buffer_list_){
                 if(merge_buffer->id_buffer_map.find(key) != merge_buffer->id_buffer_map.end()){
+                    cout << i << " enquque " << merge_buffer->id_buffer_map[key].snippet->work_id << " " << merge_buffer->id_buffer_map[key].data.current_block_count << endl;
                     return_layer_->enqueue_return(merge_buffer->id_buffer_map[key]);
                 }
-                merge_buffer->release_buffer(key);
+                i++;
+                // merge_buffer->release_buffer(key);
             }
-            id_block_count_map_.erase(key);
+            // id_block_count_map_.erase(key);
         }
     }
 }

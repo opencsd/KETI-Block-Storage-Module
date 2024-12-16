@@ -50,10 +50,10 @@ void Return::send_data(CsdResult &result){
     }
     writer.EndArray();
 
-    cout << result.data.current_block_count << endl;
-
     writer.Key("current_block_count");
     writer.Int(result.data.current_block_count);
+
+    cout << "return " << result.snippet->work_id << " " << result.data.current_block_count << endl;
 
     writer.Key("scanned_row_count");
     writer.Int(result.data.scanned_row_count);

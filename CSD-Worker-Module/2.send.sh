@@ -2,7 +2,7 @@
 
 desc="/root/opencsd/CSD-Worker-Module"
 password="1234"
-project="csd-worker-module"
+project="local"
 ip="220.94.140.246"
 
 if [ -z "$1" ]; then

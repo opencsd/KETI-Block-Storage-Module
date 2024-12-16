@@ -242,9 +242,9 @@ void Input::parse_snippet(const char* _json){
         parsed_snippet->result_info.total_block_count = _result_info["total_block_count"].GetInt();
         parsed_snippet->result_info.csd_block_count = _result_info["csd_block_count"].GetInt();
 
-        char msg[200];
+        char msg[35];
         memset(msg, '\0', sizeof(msg));
-        sprintf(msg,"Receive Snippet {ID : %d-%d} from Storage Engine Instance",parsed_snippet->query_id, parsed_snippet->work_id);
+        sprintf(msg,"Snippet Work {ID : %d-%d} Start",parsed_snippet->query_id, parsed_snippet->work_id);
         KETILOG::INFOLOG(LOGTAG, msg);
 
         scan_layer_->enqueue_scan(parsed_snippet);

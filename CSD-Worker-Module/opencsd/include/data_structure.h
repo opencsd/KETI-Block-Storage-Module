@@ -122,6 +122,8 @@ struct Data {
     data_length = 0;
     row_count = 0;
     current_block_count = 0;
+    scanned_row_count = 0;
+    filtered_row_count = 0;
   }
 };
 
@@ -130,9 +132,10 @@ struct CsdResult {
   Data data;
 
   CsdResult() : snippet(nullptr) {}
-  CsdResult(shared_ptr<Snippet> snippet_, int scanned_row_count = 0, int current_block_count = 0)
+  CsdResult(shared_ptr<Snippet> snippet_, int scanned_row_count = 0, int filtered_row_count = 0, int current_block_count = 0)
    : snippet(snippet_) {
     data.scanned_row_count = scanned_row_count;
+    data.filtered_row_count = filtered_row_count;
     data.current_block_count = current_block_count;
    }
 };
