@@ -4,7 +4,7 @@
 
 #include "worker.h"
 
-#define BLOCK_DIR "/home/ngd/storage/tmax/"
+#define BLOCK_DIR "/home/ngd/storage/new_tmax/"
 #define CSD_INFO_DIR "/home/ngd/storage/tmax/csd_info.dump"
 
 std::vector<unsigned char> Base64Decode(const std::string& input) {
@@ -71,6 +71,7 @@ void Worker::tmax_working(){
             uint64_t length = t_snippet->chunks[i].length;
 
             char chunk_buffer[length];
+            memset(chunk_buffer, 0, length);
             int  chunk_idx = 0;
 
             if (lseek(fd, offset, SEEK_SET) == -1) {
@@ -84,6 +85,8 @@ void Worker::tmax_working(){
                 close(fd);
                 continue;
             }
+
+            /*debugg*/cout<<"before ";for(int t=0; t<length; t++){printf("%02X ",(u_char)chunk_buffer[t]);}cout << endl;
 
             bool pass = true;
             
@@ -117,11 +120,16 @@ void Worker::tmax_working(){
                 // chunk list와 big chunk, big chunk의 크기를 인자로 넘겨줌
                 // buffer_length에 big chunk에 쓴 총 길이를 업데이트
                 // big chunk가 다 찼을 경우, 현재 읽고 있는 index 위치를 current_chunk_idx에 저장하고 return false
+
+                /*debugg*/cout<<"after ";for(int t=0; t<t_result.length; t++){printf("%02X ",(u_char)t_result.data[t]);}cout << endl;
+
                 if (!finished) {
                     enqueue_return(t_result);
                     t_result.init_result(t_snippet->buffer_size);
                 }
             }
+
+            sleep(10);
             
             MonitoringManager::T_AddBlockCount(t_result.chunk_count);
             t_result.chunk_count++;
