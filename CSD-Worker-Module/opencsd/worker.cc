@@ -70,68 +70,77 @@ void Worker::tmax_working(){
             uint64_t offset = t_snippet->chunks[i].offset;
             uint64_t length = t_snippet->chunks[i].length;
 
-            char chunk_buffer[length];
-            memset(chunk_buffer, 0, length);
-            int  chunk_idx = 0;
+            int loop = length / t_snippet->block_size;
 
-            if (lseek(fd, offset, SEEK_SET) == -1) {
-                perror("lseek failed");
-                close(fd);
-                continue;
-            }
+            for(int j=0; j<loop; j++){
+                uint64_t c_offset = offset + t_snippet->block_size * loop;
+                uint64_t c_length = t_snippet->block_size;
 
-            if (read(fd, chunk_buffer, length) != length){ 
-                printf("cannot read from block file %s\n", path.c_str());
-                close(fd);
-                continue;
-            }
+                char chunk_buffer[c_length];
+                memset(chunk_buffer, 0, c_length);
+                int chunk_idx = 0;
 
-            // /*debugg*/cout<<"before ";for(int t=0; t<length; t++){printf("%02X ",(u_char)chunk_buffer[t]);}cout << endl;
+                if (lseek(fd, offset, SEEK_SET) == -1) {
+                    perror("lseek failed");
+                    close(fd);
+                    continue;
+                }
 
-            bool pass = true;
-            
-            _blk_t *blk = (_blk_t *)chunk_buffer;  // get block pointer
-            _dblk_dl_t *dl;
-            dl = dblk_get_dl(blk);
-            if (dl->rowcnt == 0){
-                printf("There is no row in this block %s\n", path.c_str());
-                t_result.chunk_count++;
-                continue;
-            }
+                if (read(fd, chunk_buffer, c_length) != c_length){ 
+                    printf("cannot read from block file %s\n", path.c_str());
+                    close(fd);
+                    continue;
+                }
 
-            chunk_list_t *chunk_list;
-	        chunk_list = create_chunk_list();
-            /* [tmax] chunk list를 생성하는 함수
-                    본 함수를 호출 후 csd_filter_and_eval_out 인자로 넘겨줘야 함.
-            */
+                // /*debugg*/cout<<"before ";for(int t=0; t<length; t++){printf("%02X ",(u_char)chunk_buffer[t]);}cout << endl;
+                
+                _blk_t *blk = (_blk_t *)chunk_buffer;  // get block pointer
+                _dblk_dl_t *dl;
+                dl = dblk_get_dl(blk);
+                if (dl->rowcnt == 0){
+                    printf("There is no row in this block %s\n", path.c_str());
+                    t_result.chunk_count++;
+                    continue;
+                }
 
-            csd_filter_and_eval_out(blk, filter_info, chunk_list);
-            /* [tmax] 읽어들인 block들에 대해 filtering 및 후처리 작업
-                    deserialize한 filter info와 block 및 chunk_list를 인자로 넘겨줘야 함.
-                    block 들을 iteration하며 block 각각에 대해 본 함수를 호출해야 하며, chunk list는 block들을 iterate 하기 전 create_chunk_list()를 통해 한번만 생성되면 됨.*/
-            
-            bool finished = false;
-            while(!finished){
-                finished = write_chunk_list_to_buffer(chunk_list, &t_result.data, t_snippet->buffer_size, &chunk_idx, &t_result.length);
-                /* [tmax] big chunk (통 buffer)에 chunk list 결과 serialize
-                    big chunk size를 넘어갈 경우 어느 chunk까지 썼는지 last_chunk_no 에 기록해두고,
-                    다시 함수 들어왔을 때 이어서 쓸 수 있도록 함. */
-                // chunk list에 포함된 여러 개의 chunk data(big chunk)를 하나의 큰 버퍼에 이어 붙임
-                // chunk list와 big chunk, big chunk의 크기를 인자로 넘겨줌
-                // buffer_length에 big chunk에 쓴 총 길이를 업데이트
-                // big chunk가 다 찼을 경우, 현재 읽고 있는 index 위치를 current_chunk_idx에 저장하고 return false
+                chunk_list_t *chunk_list;
+                chunk_list = create_chunk_list();
+                /* [tmax] chunk list를 생성하는 함수
+                        본 함수를 호출 후 csd_filter_and_eval_out 인자로 넘겨줘야 함.
+                */
 
-                // /*debugg*/cout<<"after ";for(int t=0; t<t_result.length; t++){printf("%02X ",(u_char)t_result.data[t]);}cout << endl;
+                csd_filter_and_eval_out(blk, filter_info, chunk_list);
+                /* [tmax] 읽어들인 block들에 대해 filtering 및 후처리 작업
+                        deserialize한 filter info와 block 및 chunk_list를 인자로 넘겨줘야 함.
+                        block 들을 iteration하며 block 각각에 대해 본 함수를 호출해야 하며, chunk list는 block들을 iterate 하기 전 create_chunk_list()를 통해 한번만 생성되면 됨.*/
+                
+                bool finished = false;
+                while(!finished){
+                    finished = write_chunk_list_to_buffer(chunk_list, &t_result.data, t_snippet->buffer_size, &chunk_idx, &t_result.length);
+                    /* [tmax] big chunk (통 buffer)에 chunk list 결과 serialize
+                        big chunk size를 넘어갈 경우 어느 chunk까지 썼는지 last_chunk_no 에 기록해두고,
+                        다시 함수 들어왔을 때 이어서 쓸 수 있도록 함. */
+                    // chunk list에 포함된 여러 개의 chunk data(big chunk)를 하나의 큰 버퍼에 이어 붙임
+                    // chunk list와 big chunk, big chunk의 크기를 인자로 넘겨줌
+                    // buffer_length에 big chunk에 쓴 총 길이를 업데이트
+                    // big chunk가 다 찼을 경우, 현재 읽고 있는 index 위치를 current_chunk_idx에 저장하고 return false
 
-                if (!finished) {
-                    enqueue_return(t_result);
-                    t_result.init_result(t_snippet->buffer_size);
+                    // /*debugg*/cout<<"after ";for(int t=0; t<t_result.length; t++){printf("%02X ",(u_char)t_result.data[t]);}cout << endl;
+
+                    cout << t_result.length << " " ;
+
+                    if (!finished) {
+                        enqueue_return(t_result);
+                        t_result.init_result(t_snippet->buffer_size);
+                    }
                 }
             }
-            
+
             MonitoringManager::T_AddBlockCount(t_result.chunk_count);
             t_result.chunk_count++;
         }
+
+        cout << endl;
 
         close(fd);
 
