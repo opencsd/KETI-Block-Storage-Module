@@ -86,7 +86,7 @@ void Worker::tmax_working(){
                 continue;
             }
 
-            /*debugg*/cout<<"before ";for(int t=0; t<length; t++){printf("%02X ",(u_char)chunk_buffer[t]);}cout << endl;
+            // /*debugg*/cout<<"before ";for(int t=0; t<length; t++){printf("%02X ",(u_char)chunk_buffer[t]);}cout << endl;
 
             bool pass = true;
             
@@ -121,7 +121,7 @@ void Worker::tmax_working(){
                 // buffer_length에 big chunk에 쓴 총 길이를 업데이트
                 // big chunk가 다 찼을 경우, 현재 읽고 있는 index 위치를 current_chunk_idx에 저장하고 return false
 
-                /*debugg*/cout<<"after ";for(int t=0; t<t_result.length; t++){printf("%02X ",(u_char)t_result.data[t]);}cout << endl;
+                // /*debugg*/cout<<"after ";for(int t=0; t<t_result.length; t++){printf("%02X ",(u_char)t_result.data[t]);}cout << endl;
 
                 if (!finished) {
                     enqueue_return(t_result);
@@ -129,7 +129,7 @@ void Worker::tmax_working(){
                 }
             }
 
-            sleep(10);
+            // sleep(10);
             
             MonitoringManager::T_AddBlockCount(t_result.chunk_count);
             t_result.chunk_count++;

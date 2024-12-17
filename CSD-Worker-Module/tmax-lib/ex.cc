@@ -343,6 +343,7 @@ write_chunk_list_to_buffer (chunk_list_t *chunk_list, uchar **input_big_chunk,
 {
     int i;
     chunk_t *cur_chunk;
+    // int buffer_offset = 0;
     int buffer_offset = *total_len; // KETI 수정
     int total_chunk_cnt = chunk_list->res_chunk_cnt + chunk_list->chained_chunk_cnt;
     uchar *big_chunk = (uchar *)(*input_big_chunk);
@@ -361,6 +362,8 @@ write_chunk_list_to_buffer (chunk_list_t *chunk_list, uchar **input_big_chunk,
 
         if (buffer_offset + cur_chunk->used + 3 > big_chunk_size) {
             *current_chunk_idx = i;
+
+            *input_big_chunk = big_chunk;
             return false;
         }
 
@@ -374,6 +377,7 @@ write_chunk_list_to_buffer (chunk_list_t *chunk_list, uchar **input_big_chunk,
         *total_len += cur_chunk->used;
     }
 
+    *input_big_chunk = big_chunk;
     return true;
 }
 
