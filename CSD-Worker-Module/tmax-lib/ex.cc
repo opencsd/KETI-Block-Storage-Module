@@ -368,7 +368,7 @@ write_chunk_list_to_buffer (chunk_list_t *chunk_list, uchar **input_big_chunk,
         }
 
         big_chunk[buffer_offset++] = (cur_chunk->used >> 8) & 0xFF;
-        big_chunk[buffer_offset++] = (cur_chunk->used) * 0xFF;
+        big_chunk[buffer_offset++] = (cur_chunk->used) & 0xFF;
         big_chunk[buffer_offset++] = chunk_flag;
         *total_len += 3;
 

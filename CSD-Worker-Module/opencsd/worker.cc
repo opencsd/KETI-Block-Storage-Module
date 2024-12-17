@@ -128,8 +128,6 @@ void Worker::tmax_working(){
                     t_result.init_result(t_snippet->buffer_size);
                 }
             }
-
-            // sleep(10);
             
             MonitoringManager::T_AddBlockCount(t_result.chunk_count);
             t_result.chunk_count++;
