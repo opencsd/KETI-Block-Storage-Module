@@ -3,7 +3,7 @@
 void runServer(){
     httplib::Server server;
     server.Get("/csd-metric", CsdMetricCollector::HandleGetCsdMetric);
-    
+
     server.Get("/score-weight", CsdMetricCollector::HandleSetScoreWeight);
     
     cout << "[CSD Metric Collector] run on 0.0.0.0:" << CSD_METRIC_COLLECTOR_PORT << endl;
