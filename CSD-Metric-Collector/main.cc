@@ -1,4 +1,4 @@
-#include "csd-metric-collector.h"1
+#include "csd-metric-collector.h"
 
 void runServer(){
     httplib::Server server;
