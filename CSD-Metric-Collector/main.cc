@@ -4,7 +4,7 @@ void runServer(){
     httplib::Server server;
     
     server.Get("/csd-metric", CsdMetricCollector::HandleGetCsdMetric);
-    
+
 
     server.Get("/score-weight", CsdMetricCollector::HandleSetScoreWeight);
     
