@@ -14,7 +14,6 @@ void runServer(){
 int main(int argc, char *argv[]){    
     std::thread server_thread(runServer);
     CsdMetricCollector::RunCollect();
-
     server_thread.join();
 
     return 0;
