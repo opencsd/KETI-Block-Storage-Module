@@ -1,47 +1,53 @@
-## Introduction of OpenCSD KETI-CSD-Worker-Module
+## Introduction of OpenCSD KETI-Block-Storage-Module
 -------------
-CSD-Worker-Module for KETI-OpenCSD Platform
+Modules that operate within the operational storage
 
 Developed by KETI
+
+![Project Logo](image.png)
 
 ## Contents
 -------------
 [1. Requirement](#requirement)
 
-[2. Required Module](#required-Module)
+[2. Required Module](#required-module)
 
-[3. How To Install](#How-To-Install)
+[3. How To Install](#module-description-and-how-to-create-a-container)
 
-[4. Modules](#modules)
-
-[5. Governance](#governance)
+[4. Governance](#governance)
 
 ## Requirement
 -------------
->   NGD CSD
+> NGD CSD
 
->   Ubuntu 20.04.2 LTS (GNU/Linux 4.14.1_newport_4.1_5.2+ aarch64)
+> RapidJSON
 
->   RapidJSON
+> aarch64 cross compiler
 
 ## Required Module
-- *[KETI-DB-Connector-Instance](https://github.com/opencsd/KETI-DB-Connector-Instance)*
-- *[KETI-Storage-Engine-Instance](https://github.com/opencsd/KETI-Storage-Engine-Instance)*
-- *[KETI-CSD-Proxy](https://github.com/opencsd/KETI-CSD-Proxy)*
-- *[KETI-LBA2PBA-Manager](https://github.com/opencsd/KETI-LBA2PBA-Manager)*
 - *[RocksDB](https://github.com/facebook/rocksdb)*
 
-## How To Install
+## Module description and how to create a container
 -------------
 ```bash
+git clone https://github.com/opencsd/KETI-Storage-Controller-Module
+cd CSD-Worker-Module
 git submodule add https://github.com/facebook/rocksdb
-cd keti
-make -j 4
 ```
 
-## Modules
+### CSD-Worker-Module
 -------------
-### CSD Input Interface
+```bash
+cd CSD-Worker-Module
+./1.build.sh cross
+./2.send.sh cross
+```
+```bash
+# in csd
+cd CSD-Worker-Module
+./container-processing.sh
+```
+#### CSD Input Interface
 -------------
 A module that receives the snippet delivered by the Storage Engine Node.
 
@@ -49,13 +55,13 @@ Parsing the received snippet and storing it in a structure that can be used insi
 
 Check the snippet information, divide it into scan, scan&filter operations, and deliver it to the corresponding parallel execution queue
 
-### CSD Scanning
+#### CSD Scanning
 -------------
 Module that reads table data inside CSD
 
 Read data by accessing the block device as a PBA (Physical Block Address) rather than through the file system
 
-### CSD Filtering
+#### CSD Filtering
 -------------
 Module that performs Where conditional filtering on blocks scanned by CSD Scanning
 
@@ -74,17 +80,31 @@ for (int i = 0; i < rowcount; i++)
 </code>
 </pre>
 
-### CSD Merge Manager
+#### CSD Merge Manager
 -------------
 Module that merges scanned and filtered data
 
 Considering that the data will be reduced after the CSD Filtering module operates, the number of communication is reduced by combining blocks.
 
-### CSD Return Interface
+#### CSD Return Interface
 -------------
 A module that delivers the data merged by the CSD Merge Manager to the Buffer manager of the Storage Engine Node.
 
 Merge information is delivered in JSON format, and merge data is delivered in raw data format.
+
+### CSD-Metric-Collector
+-------------
+A module that collects CPU, memory, and network metrics from within the csd and periodically sends them to the storage metric collector.
+```bash
+cd CSD-Metric-Collector
+./1.build.sh
+./2.send.sh
+```
+```bash
+# in csd
+cd CSD-Metric-Collector
+./container-processing.sh
+```
 
 ## Governance
 -------------
