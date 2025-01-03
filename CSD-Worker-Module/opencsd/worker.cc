@@ -73,14 +73,14 @@ void Worker::tmax_working(){
             int loop = length / t_snippet->block_size;
 
             for(int j=0; j<loop; j++){
-                uint64_t c_offset = offset + t_snippet->block_size * loop;
+                uint64_t c_offset = offset + t_snippet->block_size * j;
                 uint64_t c_length = t_snippet->block_size;
 
                 char chunk_buffer[c_length];
                 memset(chunk_buffer, 0, c_length);
                 int chunk_idx = 0;
 
-                if (lseek(fd, offset, SEEK_SET) == -1) {
+                if (lseek(fd, c_offset, SEEK_SET) == -1) {
                     perror("lseek failed");
                     close(fd);
                     continue;
@@ -92,7 +92,11 @@ void Worker::tmax_working(){
                     continue;
                 }
 
-                // /*debugg*/cout<<"before ";for(int t=0; t<length; t++){printf("%02X ",(u_char)chunk_buffer[t]);}cout << endl;
+                // if(t_result.chunk_count == 0){
+                //     /*debugg*/cout<<"before ";for(int t=0; t<c_length; t++){printf("%02X ",(u_char)chunk_buffer[t]);}cout << endl;
+                // }
+
+                // cout << c_length << ".";
                 
                 _blk_t *blk = (_blk_t *)chunk_buffer;  // get block pointer
                 _dblk_dl_t *dl;
@@ -125,7 +129,9 @@ void Worker::tmax_working(){
                     // buffer_length에 big chunk에 쓴 총 길이를 업데이트
                     // big chunk가 다 찼을 경우, 현재 읽고 있는 index 위치를 current_chunk_idx에 저장하고 return false
 
-                    // /*debugg*/cout<<"after ";for(int t=0; t<t_result.length; t++){printf("%02X ",(u_char)t_result.data[t]);}cout << endl;
+                    // if(t_result.chunk_count == 0){
+                    //     /*debugg*/cout<<"after ";for(int t=0; t<t_result.length; t++){printf("%02X ",(u_char)t_result.data[t]);}cout << endl;
+                    // }
 
                     cout << t_result.length << " " ;
 
@@ -134,6 +140,8 @@ void Worker::tmax_working(){
                         t_result.init_result(t_snippet->buffer_size);
                     }
                 }
+
+                // cout << " / ";
             }
 
             MonitoringManager::T_AddBlockCount(t_result.chunk_count);
