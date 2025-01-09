@@ -1,7 +1,0 @@
-FROM ubuntu:18.04
-
-# 실행 파일을 컨테이너 내부로 복사
-COPY ./csd-worker-module /csd-worker-module
-RUN chmod +x /csd-worker-module
-
-ENTRYPOINT ["/csd-worker-module"]
