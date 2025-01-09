@@ -1,0 +1,7 @@
+FROM ubuntu:18.04
+
+# 실행 파일을 컨테이너 내부로 복사
+COPY csd-metric-collector-aarch64 /csd-metric-collector-aarch64
+RUN chmod +x /csd-metric-collector-aarch64
+
+ENTRYPOINT ["/csd-metric-collector-aarch64"]
