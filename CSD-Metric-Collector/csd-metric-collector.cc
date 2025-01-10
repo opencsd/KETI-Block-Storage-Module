@@ -104,7 +104,7 @@ void CsdMetricCollector::init_metric(){
             iss >> key >> value;
 
             if (key == "MemTotal:") {
-                memory_.total = value;
+                memory_.total = value / 1024.0 / 1024.0;;
             }
         }
     }
@@ -143,16 +143,16 @@ string CsdMetricCollector::serialize_response(){
     writer.Double(cpu_.utilization);
 
     writer.Key("memoryTotal");
-    writer.Int(memory_.total);
+    writer.Double(memory_.total);
     writer.Key("memoryUsed");
-    writer.Int(memory_.used); 
+    writer.Double(memory_.used); 
     writer.Key("memoryUtilization");
     writer.Double(memory_.utilization);
 
     writer.Key("diskTotal");
-    writer.Int(storage_.total);
+    writer.Double(storage_.total);
     writer.Key("diskUsed");
-    writer.Int(storage_.used); 
+    writer.Double(storage_.used); 
     writer.Key("diskUtilization");
     writer.Double(storage_.utilization);
 
@@ -262,8 +262,9 @@ void CsdMetricCollector::update_memory(){
         }
     }
     
-    memory_.used = memory_.total - memory_.free - memory_.buffers - memory_.cached;
-    memory_.utilization = std::round((1.0 - static_cast<double>(memory_.free + memory_.buffers + memory_.cached) / memory_.total) * 100.0 * 100) / 100;
+    double freeGB = (memory_.free + memory_.buffers + memory_.cached) / 1024.0 / 1024.0;
+    memory_.used = memory_.total - freeGB;
+    memory_.utilization = std::round((memory_.used / memory_.total) * 100.0 * 100) / 100;
 }
 
 void CsdMetricCollector::update_network(){
@@ -282,14 +283,14 @@ void CsdMetricCollector::update_network(){
     network_.rxData= currentRxBytes - network_.rxBytes;
     network_.txData = currentTxBytes - network_.txBytes;
 
-    network_.used = (network_.rxData + network_.txData) / 5 * 8;
+    network_.used = (network_.rxData + network_.txData) / 5 * 8; //5초동안 총 네트워크 전송량
     
     network_.rxBytes = currentRxBytes;
     network_.txBytes = currentTxBytes;
 }
 
 void CsdMetricCollector::update_storage(){
-    std::string dfCommand = "df -k --total";
+    std::string dfCommand = "df -h";
     std::string dfOutput;
     FILE* pipe = popen(dfCommand.c_str(), "r");
     char buffer[128];
@@ -304,14 +305,26 @@ void CsdMetricCollector::update_storage(){
 
     std::getline(stream, line); 
 
-    
     while (std::getline(stream, line)) {
         std::istringstream lineStream(line);
-        std::string skip;
-        lineStream >> skip >> storage_.total >> storage_.used >> skip >> skip;
-    }
+        std::string filesystem, size, used, avail, usePercent, mountPoint;
 
-    storage_.utilization = std::round(static_cast<float>(storage_.used) / storage_.total * 100 * 100) / 100;
+        lineStream >> filesystem >> size >> used >> avail >> usePercent >> mountPoint;
+
+        if (filesystem == "/dev/ngd-blk3") {
+            // Remove 'G' from size and used, and convert to double
+            size.erase(size.find_last_not_of("G") + 1);
+            used.erase(used.find_last_not_of("G") + 1);
+
+            double total = std::stod(size);   // Total size in GB
+            double usedSpace = std::stod(used); // Used space in GB
+            double utilization = std::round((usedSpace / total) * 100 * 100) / 100; // Utilization in %
+
+            storage_.total = total;
+            storage_.used = usedSpace;
+            storage_.utilization = utilization;
+        }
+    }
 }
 
 void CsdMetricCollector::update_power(){

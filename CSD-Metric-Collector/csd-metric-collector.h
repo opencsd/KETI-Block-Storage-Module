@@ -61,14 +61,14 @@ struct Memory{
     long free;
     long buffers;
     long cached;
-    int total;
-    int used;
-    float utilization;
+    double total;
+    double used;
+    double utilization;
 };
 
 struct Storage{
-    int total;
-    int used;
+    double total;
+    double used;
     float utilization;
 };
 
