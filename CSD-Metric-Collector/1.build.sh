@@ -13,7 +13,7 @@ image_name="csd-metric-collector"
 version="v3.0"
 
 # 아키텍쳐에 맞는 컴파일러인지 확인 필수
-aarch64-linux-gnu-g++ -o csd-metric-collector-aarch64 main.cc csd-metric-collector.cc -L/root/workspace/CSD-Metric-Collector/rapidjson -pthread
+aarch64-linux-gnu-g++ -o csd-metric-collector-aarch64 main.cc csd-metric-collector.cc -L/root/workspace/keti/CSD-Worker-Module/rapidjson -pthread
 
 # # make image
 # docker build -t $image_name:$version . && \

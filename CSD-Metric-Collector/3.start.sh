@@ -11,7 +11,6 @@ do
     echo "Connecting to $ip"
 
     # 1.csd 접속
-    ssh -n root@$ip "cd /home/ngd/workspace/csd-metric-collector-docker && ./container-processing.sh" 
-    # cd /home/ngd/workspace/csd-metric-collector-docker
+    ssh -n root@$ip "cd /root/opencsd/CSD-Metric-Collector && ./container-processing.sh" 
     echo "Connection to $ip completed"
 done

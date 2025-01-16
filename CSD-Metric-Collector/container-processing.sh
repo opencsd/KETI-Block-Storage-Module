@@ -19,9 +19,14 @@ else
 fi
 
 # 2.컨테이너 이미지 빌드(dockerfile 기반)
-docker build -t csd-metric-collector --build-arg CSD_IP=$inet_address --build-arg CSD_HOST_SERVER_IP=$CSD_HOST_SERVER_IP .
+docker build -t csd-metric-collector .
 
 # 3.컨테이너 실행 
-docker run -d ---restart=always it --privileged --name csd-metric-collector \
+docker run -d --restart=always -it --privileged --name csd-metric-collector \
     -e MOD=$1 \
-    -v /proc:/metric/proc -v /sys/class/net/ngdtap0/statistics:/metric/net csd-metric-collector 
+    -e CSD_IP=$inet_address \
+    -e CSD_HOST_SERVER_IP=$CSD_HOST_SERVER_IP \
+    -v /proc:/host/proc:ro \
+    -v /sys:/host/sys:ro  \
+    -v /:/rootfs:ro \
+    csd-metric-collector 

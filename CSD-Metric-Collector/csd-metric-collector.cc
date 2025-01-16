@@ -11,14 +11,14 @@ inline string readStatisticsField(const string &fieldName) {
 void CsdMetricCollector::run_collect(){
     while(true){
         update_cpu();
-        update_memory();
+        update_memory(); 
         update_network();
-        update_storage();
+        update_storage(); 
         // update_power();
         get_csd_working_block_count();
         calcul_csd_metric_score();
 
-        if(getenv("MOD") == "debug"){
+        if(strcmp(getenv("MOD"), "debug") == 0){
             print_metric();
         }
 
@@ -31,25 +31,25 @@ void CsdMetricCollector::run_collect(){
 void CsdMetricCollector::print_metric(){
     std::cout << "ip: " << csd_ip_ << std::endl;
 
-    std::cout << "CPU Total: " << cpu_.total << std::endl;
-    std::cout << "CPU Used: " << cpu_.used << std::endl;
+    std::cout << "CPU Total(core): " << cpu_.total << "Core" << std::endl;
+    std::cout << "CPU Used(core): " << cpu_.used << "Core" << std::endl;
     std::cout << "CPU Utilization(%): " << cpu_.utilization << "%" << std::endl;
 
-    std::cout << "Memory Total(KB): " << memory_.total << std::endl;
-    std::cout << "Memory Used(KB): " << memory_.used << std::endl;
+    std::cout << "Memory Total(GB): " << memory_.total << "GB" << std::endl;
+    std::cout << "Memory Used(GB): " << memory_.used << "GB" << std::endl;
     std::cout << "Memory Utilization(%): " << memory_.utilization << "%" << std::endl;
 
-    std::cout << "Storage Total(KB): " << storage_.total << std::endl;
-    std::cout << "Storage Used(KB): " << storage_.used << std::endl;
+    std::cout << "Storage Total(GB): " << storage_.total << "GB" << std::endl;
+    std::cout << "Storage Used(GB): " << storage_.used << "GB" << std::endl;
     std::cout << "Storage Utilization(%): " << storage_.utilization << "%" << std::endl;
 
     // std::cout << "Power Total: " << power_.total << std::endl;
     // std::cout << "Power Used: " << power_.used << std::endl;
     // std::cout << "Power Utilization: " << power_.utilization << "%" << std::endl;
 
-    std::cout << "Network RX Bytes(Byte): " << network_.rxData << std::endl;
-    std::cout << "Network TX Bytes(Byte): " << network_.txData << std::endl;
-    std::cout << "Network Used(kbps): " << network_.used << std::endl;
+    std::cout << "Network RX Bytes(Byte): " << network_.rxData << "Byte" << std::endl;
+    std::cout << "Network TX Bytes(Byte): " << network_.txData << "Byte" << std::endl;
+    std::cout << "Network Used(kbps): " << network_.used << "kbps" << std::endl;
 
     std::cout << "CSD Working Block Count: " << working_block_count_ << std::endl;  
     std::cout << "CSD Metric Score: " << csd_metric_score_ << std::endl;  
@@ -57,7 +57,7 @@ void CsdMetricCollector::print_metric(){
 
 void CsdMetricCollector::init_metric(){
     {
-        FILE* fp = popen("grep -c processor /metric/proc/cpuinfo", "r");
+        FILE* fp = popen("grep -c processor /host/proc/cpuinfo", "r");
         int coreCount;
         
         if (!fp) {
@@ -77,9 +77,9 @@ void CsdMetricCollector::init_metric(){
         FILE *pStat = NULL;
         char cpuID[6] = {0};
 
-        pStat = fopen("/metric/proc/stat", "r");
+        pStat = fopen("/host/proc/stat", "r");
         if (pStat == NULL) {
-            std::cerr << "cannot open file: /metric/proc/stat" << std::endl;
+            std::cerr << "cannot open file: /host/proc/stat" << std::endl;
             return;
         }
 
@@ -89,9 +89,9 @@ void CsdMetricCollector::init_metric(){
     }
 
     {
-        std::ifstream meminfo("/metric/proc/meminfo");
+        std::ifstream meminfo("/host/proc/meminfo");
          if (!meminfo.is_open()) {
-            std::cerr << "cannot open file: /metric/proc/meminfo" << std::endl;
+            std::cerr << "cannot open file: /host/proc/meminfo" << std::endl;
             return;
         }
 
@@ -104,14 +104,13 @@ void CsdMetricCollector::init_metric(){
             iss >> key >> value;
 
             if (key == "MemTotal:") {
-                memory_.total = value / 1024.0 / 1024.0;;
+                memory_.total = value / 1024.0 / 1024.0;
             }
         }
     }
 
     {
-        string statisticsFilePath = "/metric/net/";
-        // string statisticsFilePath = "/sys/class/net/eno1/statistics/";
+        string statisticsFilePath = "/host/sys/class/net/ngdtap0/statistics/";
         
         string rxBytesFieldName = statisticsFilePath + "rx_bytes";
         string txBytesFieldName = statisticsFilePath + "tx_bytes";
@@ -223,7 +222,7 @@ void CsdMetricCollector::update_cpu(){
 
     stJiffies curJiffies, diffJiffies;
 
-    pStat = fopen("/metric/proc/stat", "r");
+    pStat = fopen("/host/proc/stat", "r");
     fscanf(pStat, "%s %d %d %d %d", cpuID, &curJiffies.user,
             &curJiffies.nice, &curJiffies.system, &curJiffies.idle);
 
@@ -243,7 +242,7 @@ void CsdMetricCollector::update_cpu(){
 }
 
 void CsdMetricCollector::update_memory(){
-    std::ifstream meminfo("/metric/proc/meminfo");
+    std::ifstream meminfo("/host/proc/meminfo");
 
     std::string line;
     while (std::getline(meminfo, line)) {
@@ -268,8 +267,7 @@ void CsdMetricCollector::update_memory(){
 }
 
 void CsdMetricCollector::update_network(){
-    string statisticsFilePath = "/metric/net/";
-    // string statisticsFilePath = "/sys/class/net/eno1/statistics/";
+    string statisticsFilePath = "/host/sys/class/net/ngdtap0/statistics/";
     
     string rxBytesFieldName = statisticsFilePath + "rx_bytes";
     string txBytesFieldName = statisticsFilePath + "tx_bytes";
@@ -312,13 +310,12 @@ void CsdMetricCollector::update_storage(){
         lineStream >> filesystem >> size >> used >> avail >> usePercent >> mountPoint;
 
         if (filesystem == "/dev/ngd-blk3") {
-            // Remove 'G' from size and used, and convert to double
             size.erase(size.find_last_not_of("G") + 1);
             used.erase(used.find_last_not_of("G") + 1);
 
-            double total = std::stod(size);   // Total size in GB
-            double usedSpace = std::stod(used); // Used space in GB
-            double utilization = std::round((usedSpace / total) * 100 * 100) / 100; // Utilization in %
+            double total = std::stod(size);   
+            double usedSpace = std::stod(used);
+            double utilization = std::round((usedSpace / total) * 100 * 100) / 100;
 
             storage_.total = total;
             storage_.used = usedSpace;
@@ -331,8 +328,8 @@ void CsdMetricCollector::update_power(){
     string powerFilePath1 = "intel-rapl:0";
     string powerFilePath2 = "intel-rapl:1";
 
-    string energyFieldName1 = "/sys/class/powercap/" + powerFilePath1 + "/energy_uj"; 
-    string energyFieldName2 = "/sys/class/powercap/" + powerFilePath2 + "/energy_uj"; 
+    string energyFieldName1 = "/host/sys/class/powercap/" + powerFilePath1 + "/energy_uj"; 
+    string energyFieldName2 = "/host/sys/class/powercap/" + powerFilePath2 + "/energy_uj"; 
 
     string currentEnergyStr1 = readStatisticsField(energyFieldName1);
     string currentEnergyStr2 = readStatisticsField(energyFieldName2);
