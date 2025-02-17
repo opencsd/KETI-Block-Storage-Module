@@ -26,6 +26,7 @@ void CsdMetricCollector::run_collect(){
 
         sleep(5);
     }
+    cout << "run collect cycle stopped" << endl;
 }
 
 void CsdMetricCollector::print_metric(){
@@ -183,7 +184,6 @@ string CsdMetricCollector::serialize_response(){
 }
 
 void CsdMetricCollector::send_metric(){
-    cout << "send_metric" << endl;
     string jsonStr = serialize_response();
 
     if(getenv("MOD") == "debug"){
