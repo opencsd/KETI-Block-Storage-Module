@@ -19,11 +19,13 @@ else
 fi
 
 # 2.컨테이너 이미지 빌드(dockerfile 기반)
-docker build -t csd-worker-module --build-arg CSD_IP=$inet_address --build-arg CSD_HOST_SERVER_IP=$CSD_HOST_SERVER_IP .
+docker build -t csd-worker-module .
 
 # 3.컨테이너 실행 
-docker run -d -it --restart=always --privileged -p 40302:40302 -p 40301:40301 \
+docker run -d -it --restart=always --privileged \
+    -p 40302:40302 -p 40301:40301 \
     -v /home/ngd/storage:/home/ngd/storage \
-    -e LOG_LEVEL=$1 -e STORAGE_ENGINE_HOST_SERVER_IP=$STORAGE_ENGINE_HOST_SERVER_IP \
-    --name csd-worker-module csd-worker-module 
+    -e STORAGE_ENGINE_HOST_SERVER_IP=$STORAGE_ENGINE_HOST_SERVER_IP -e BUFF_M_PORT=40204 \
+    --name csd-worker-module \
+    csd-worker-module $1
     
