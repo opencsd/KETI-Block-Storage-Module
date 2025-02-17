@@ -91,8 +91,9 @@ inline kValue calcul_multiple_operation(kValue lv, kValue rv, string oper){
             break;
         }case KETI_VALUE_TYPE::DECIMAL:{
             if(rv.type_ == KETI_VALUE_TYPE::INT32){
-                int base = static_cast<int>(pow(100, lv.real_));
-                result.int64_ = lv.int64_ * (rv.int_ * base);
+                // int base = static_cast<int>(pow(100, lv.real_));
+                // result.int64_ = lv.int64_ * (rv.int_ * base);
+                result.int64_ = lv.int64_ * rv.int_;
                 result.real_ = lv.real_;
             }else{
                 result.int64_ = lv.int64_ * rv.int64_;
@@ -588,7 +589,6 @@ inline int convert_value_to_char(char* dest, kValue value, int offset){
 
             memcpy(dest+offset, reversed_integer_char, 6);
             memcpy(dest+offset+6, real_char, value.real_);
-
             return 6 + value.real_;            
         }case KETI_VALUE_TYPE::STRING:{
             string src = value.string_;

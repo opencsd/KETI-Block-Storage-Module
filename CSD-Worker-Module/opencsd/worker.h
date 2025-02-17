@@ -97,4 +97,5 @@ class Worker{
     private:
         WorkQueue<shared_ptr<tSnippet>>* work_queue_;
         WorkQueue<std::shared_ptr<result>>* return_queue_;
+        char msg[100];
 };

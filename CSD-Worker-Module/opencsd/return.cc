@@ -9,7 +9,6 @@ void Return::return_worker(){
 }
 
 void Return::send_data(CsdResult &result){
-    //마지막 블록과 관련한 로그 작업
     string json_;
 
     StringBuffer block_buf;
@@ -53,8 +52,6 @@ void Return::send_data(CsdResult &result){
     writer.Key("current_block_count");
     writer.Int(result.data.current_block_count);
 
-    cout << "return " << result.snippet->work_id << " " << result.data.current_block_count << endl;
-
     writer.Key("scanned_row_count");
     writer.Int(result.data.scanned_row_count);
 
@@ -75,7 +72,7 @@ void Return::send_data(CsdResult &result){
     writer.String(result.snippet->result_info.table_alias.c_str());
 
     writer.EndObject();
-
+    
     string block_buf_ = block_buf.GetString();
 
     int sockfd;
@@ -86,7 +83,7 @@ void Return::send_data(CsdResult &result){
     }
     memset(&serv_addr, 0, sizeof(serv_addr));
     serv_addr.sin_family = AF_INET;
-    serv_addr.sin_port = htons(BUFF_M_PORT);
+    serv_addr.sin_port = htons(static_cast<uint16_t>(atoi(BUFF_M_PORT)));
     serv_addr.sin_addr.s_addr = inet_addr(STORAGE_ENGINE_IP);
 
     int response = connect(sockfd,(const sockaddr*)&serv_addr,sizeof(serv_addr));

@@ -152,7 +152,6 @@ void Worker::tmax_working(){
 
         close(fd);
 
-        char msg[50];
         memset(msg, '\0', sizeof(msg));
         sprintf(msg,"Complete Tmax Work {ID : %d}",t_snippet->id);
         KETILOG::INFOLOG("T", msg);

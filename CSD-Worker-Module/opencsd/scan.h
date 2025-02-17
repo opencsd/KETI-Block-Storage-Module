@@ -23,7 +23,7 @@ public:
     void index_block_scan(shared_ptr<Snippet> snippet);  
     void sst_file_full_scan(shared_ptr<Snippet> snippet);
     void scan_wal(shared_ptr<Snippet> snippet);
-    void enqueue_scan_result(CsdResult scan_result);
+    void enqueue_scan_result(CsdResult scan_result, bool flag = false);
     
     void generate_seek_key(int number, char* table_index_number);
     string convert_key_to_value(const rocksdb::Slice& key, SchemaInfo& schema_info);
@@ -38,5 +38,5 @@ private:
     WorkQueue<shared_ptr<Snippet>>* scan_queue_;
 
     inline const static std::string LOGTAG = "CSD Scan";
-    char msg[200];
+    char msg[100];
 };

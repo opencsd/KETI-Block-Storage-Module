@@ -99,7 +99,6 @@ void Input::parse_snippet(const char* _json){
 			t_snippet->chunks.push_back(chunk);
         }   
         
-        char msg[50];
         memset(msg, '\0', sizeof(msg));
         sprintf(msg,"Receive Tmax Request Snippet {ID : %d}",t_snippet->id);
         KETILOG::INFOLOG(LOGTAG, msg);
@@ -242,9 +241,8 @@ void Input::parse_snippet(const char* _json){
         parsed_snippet->result_info.total_block_count = _result_info["total_block_count"].GetInt();
         parsed_snippet->result_info.csd_block_count = _result_info["csd_block_count"].GetInt();
 
-        char msg[35];
         memset(msg, '\0', sizeof(msg));
-        sprintf(msg,"Snippet Work {ID : %d-%d} Start",parsed_snippet->query_id, parsed_snippet->work_id);
+        sprintf(msg,"Snippet  {ID : %d|%d} Start",parsed_snippet->query_id, parsed_snippet->work_id);
         KETILOG::INFOLOG(LOGTAG, msg);
 
         scan_layer_->enqueue_scan(parsed_snippet);

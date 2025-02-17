@@ -61,7 +61,7 @@ class KETILOG {
         }
 
         static void SetDefaultLogLevel(){
-            GetInstance().LOG_LEVEL = DEBUG;
+            GetInstance().LOG_LEVEL = INFO;
         }
         
         static void SetLogLevel(int level){

@@ -27,6 +27,6 @@ private:
     map<string, int> id_block_count_map_;
     mutex mu;
 
-    inline const static std::string LOGTAG = "CSD Merge Manager";
-    char msg[200];
+    inline const static std::string LOGTAG = "CSD Projection";
+    char msg[100];
 };

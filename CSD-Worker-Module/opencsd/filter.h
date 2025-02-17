@@ -34,7 +34,12 @@ public:
     bool compare_is(const char* origin_row_data, SchemaInfo& schema_info, Filtering& filtering, vector<int>& column_offset_list);
     bool compare_is_not(const char* origin_row_data, SchemaInfo& schema_info, Filtering& filtering, vector<int>& column_offset_list);
 
-    void enqueue_filter(CsdResult result){
+    void enqueue_filter(CsdResult result, bool flag = false){
+        if(flag){
+            memset(msg, '\0', sizeof(msg));
+            sprintf(msg,"Snippet {ID : %d|%d} Filter Complete",result.snippet->query_id, result.snippet->work_id);
+            KETILOG::INFOLOG(LOGTAG, msg);
+        }
         filter_queue_->push_work(result);
     }
         
@@ -43,5 +48,5 @@ private:
     WorkQueue<CsdResult>* filter_queue_;
 
     inline const static std::string LOGTAG = "CSD Filter";
-    char msg[200];
+    char msg[100];
 };

@@ -356,8 +356,13 @@ void Scan::read_index_block(CsdResult &scan_result, shared_ptr<Snippet> snippet,
 
     if(scan_result.data.current_block_count == NUM_OF_BLOCKS || left_block_count == 0){
         if(left_block_count == 0){
-            cout << "scanned row count : " << scan_result.data.scanned_row_count << "(" << snippet->work_id << ")" << endl;
+            memset(msg, '\0', sizeof(msg));
+            sprintf(msg,"Snippet {ID : %d|%d} Scan Complete - scanned row count : %d",scan_result.snippet->query_id, scan_result.snippet->work_id, scan_result.data.scanned_row_count);
+            KETILOG::DEBUGLOG(LOGTAG, msg);
         }
+        memset(msg, '\0', sizeof(msg));
+        sprintf(msg,"Snippet {ID : %d|%d} Scan Complete",scan_result.snippet->query_id, scan_result.snippet->work_id);
+        KETILOG::TRACELOG(LOGTAG, msg);
         scan_result.data.row_offset.push_back(scan_result.data.data_length);
         enqueue_scan_result(scan_result);
         scan_result.data.clear();
@@ -485,6 +490,7 @@ void Scan::sst_file_full_scan(shared_ptr<Snippet> snippet){
                     scan_result.data.current_block_count += 100;
                     left_block_count -= 100;
                     scan_result.data.row_offset.push_back(scan_result.data.data_length);
+
                     enqueue_scan_result(scan_result);
                     scan_result.data.clear();
                 }
@@ -499,12 +505,14 @@ void Scan::sst_file_full_scan(shared_ptr<Snippet> snippet){
         }
     }    
 
-    cout << "total scanned row count : " << total_scanned_row_count << "(" << snippet->work_id << ")" << endl;
+    memset(msg, '\0', sizeof(msg));
+    sprintf(msg,"Snippet {ID : %d|%d} Scan Complete (rows:%d)",scan_result.snippet->query_id, scan_result.snippet->work_id, total_scanned_row_count);
+    KETILOG::DEBUGLOG(LOGTAG, msg);
 
     scan_result.data.current_block_count += left_block_count;
     left_block_count = 0;
     scan_result.data.row_offset.push_back(scan_result.data.data_length);
-    enqueue_scan_result(scan_result);
+    enqueue_scan_result(scan_result, true);
     scan_result.data.clear();
 }
 
@@ -552,11 +560,11 @@ string Scan::convert_key_to_value(const rocksdb::Slice& key, SchemaInfo& schema_
     return converted_key;
 }
 
-void Scan::enqueue_scan_result(CsdResult scan_result){
+void Scan::enqueue_scan_result(CsdResult scan_result, bool flag){
     if(scan_result.data.row_count == 0 || scan_result.snippet->query_info.filtering.size() == 0){
         scan_result.data.filtered_row_count = scan_result.data.scanned_row_count;
         projection_layer_->enqueue_projection(scan_result);
     }else {
-        filter_layer_->enqueue_filter(scan_result);
+        filter_layer_->enqueue_filter(scan_result, flag);
     }
 }

@@ -18,5 +18,5 @@ private:
     Worker* tmax_worker_;
 
     inline const static std::string LOGTAG = "CSD Input";
-    char msg[200];
+    char msg[100];
 };
