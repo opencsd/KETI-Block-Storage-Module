@@ -471,6 +471,7 @@ void Scan::sst_file_full_scan(shared_ptr<Snippet> snippet){
                 if(scan_result.data.data_length + row_length > BUFFER_SIZE){
                     scan_result.data.current_block_count += 100;
                     left_block_count -= 100;
+                    cout << "[Scan] scan process working {ID:" << to_string(scan_result.snippet->query_id) << "|" << to_string(scan_result.snippet->work_id) << "}... (left:" << to_string(left_block_count) << ")" << endl;
                     scan_result.data.row_offset.push_back(scan_result.data.data_length);
                     enqueue_scan_result(scan_result);
                     scan_result.data.clear();
@@ -489,6 +490,7 @@ void Scan::sst_file_full_scan(shared_ptr<Snippet> snippet){
                 if(scan_result.data.data_length + row_length > BUFFER_SIZE){
                     scan_result.data.current_block_count += 100;
                     left_block_count -= 100;
+                    cout << "[Scan] scan process working {ID:" << to_string(scan_result.snippet->query_id) << "|" << to_string(scan_result.snippet->work_id) << "}... (left:" << to_string(left_block_count) << ")" << endl;
                     scan_result.data.row_offset.push_back(scan_result.data.data_length);
 
                     enqueue_scan_result(scan_result);
@@ -508,6 +510,7 @@ void Scan::sst_file_full_scan(shared_ptr<Snippet> snippet){
     memset(msg, '\0', sizeof(msg));
     sprintf(msg,"Snippet {ID : %d|%d} Scan Complete (rows:%d)",scan_result.snippet->query_id, scan_result.snippet->work_id, total_scanned_row_count);
     KETILOG::DEBUGLOG(LOGTAG, msg);
+    // cout << "[Scan] complete scan process {ID:" << to_string(scan_result.snippet->query_id) << "|" << to_string(scan_result.snippet->work_id) << "}" << endl;
 
     scan_result.data.current_block_count += left_block_count;
     left_block_count = 0;

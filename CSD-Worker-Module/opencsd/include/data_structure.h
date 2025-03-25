@@ -160,6 +160,7 @@ struct MergeBuffer {
     unique_lock<mutex> lock(mu);
     
     if (id_buffer_map.find(key) != id_buffer_map.end()) {
+        cout << "[Projection] complete projection process {ID:" << key << "}" << endl;
         id_buffer_map.erase(key);
     }
   }

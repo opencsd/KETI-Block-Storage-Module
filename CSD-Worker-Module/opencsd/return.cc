@@ -75,6 +75,8 @@ void Return::send_data(CsdResult &result){
     
     string block_buf_ = block_buf.GetString();
 
+    // cout << "[Return] return csd result {ID:" << to_string(result.snippet->query_id) << "|" << to_string(result.snippet->work_id) << "}... (blocks:" << to_string(result.data.current_block_count) << ")" << endl;
+
     int sockfd;
     struct sockaddr_in serv_addr;
     sockfd = socket(PF_INET, SOCK_STREAM, 0);

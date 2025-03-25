@@ -244,6 +244,7 @@ void Input::parse_snippet(const char* _json){
         memset(msg, '\0', sizeof(msg));
         sprintf(msg,"Snippet  {ID : %d|%d} Start",parsed_snippet->query_id, parsed_snippet->work_id);
         KETILOG::INFOLOG(LOGTAG, msg);
+        // cout << "[Input] start snippet {ID:" << to_string(parsed_snippet->query_id) << "|" << to_string(parsed_snippet->work_id) << "}" << endl;
 
         scan_layer_->enqueue_scan(parsed_snippet);
 

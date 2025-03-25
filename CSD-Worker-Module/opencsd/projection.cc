@@ -74,6 +74,8 @@ void Projection::projectioning(MergeBuffer* merge_buffer, CsdResult& result){
         }
     }
 
+    // cout << "[Projection] projection process working {ID:" << to_string(result.snippet->query_id) << "|" << to_string(result.snippet->work_id) << "}... (rows:" << to_string(merge_buffer->id_buffer_map[key].data.row_count) << ")" << endl;
+
     merge_buffer->id_buffer_map[key].data.current_block_count += result.data.current_block_count;
     merge_buffer->id_buffer_map[key].data.scanned_row_count += result.data.scanned_row_count;
     merge_buffer->id_buffer_map[key].data.filtered_row_count += result.data.filtered_row_count;
