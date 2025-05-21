@@ -9,6 +9,14 @@ using namespace std;
 
 class MonitoringManager{
   public: 
+    static void SendScannedRowCount(){
+        GetInstance().sendScannedRowCount();
+    }
+
+    static void SendFilteredRowCount(){
+        GetInstance().sendFilteredRowCount();
+    }
+
     static void T_AddBlockCount(int add_block){
         GetInstance().t_addBlockCount(add_block);
     }
@@ -23,6 +31,14 @@ class MonitoringManager{
 
     static void AddBlockCount(int add_block){
         GetInstance().addBlockCount(add_block);
+    }
+
+    static void AddScannedRow(int add_scanned_row){
+        GetInstance().addScannedRow(add_scanned_row);
+    }
+
+    static void AddFilteredRow(int add_filtered_row){
+        GetInstance().addFilteredRow(add_filtered_row);
     }
 
     static void SubtractCurrentBlockCount(int subtract_block){
@@ -79,7 +95,7 @@ class MonitoringManager{
     }
 
   private:
-    MonitoringManager() {
+    MonitoringManager(): cli("http://10.0.4.83:9002") {
         Current_Working_Block_Count = 0;
         Accumulate_Working_Block_Count = 0;
     };
@@ -89,28 +105,48 @@ class MonitoringManager{
         return *this;
     }   
 
+    void sendScannedRowCount(){
+        while(true){
+            std::this_thread::sleep_for(std::chrono::seconds(2));
+            unique_lock<mutex> lock(row_mutex);
+            std::string url = "/scan?value=" + std::to_string(Scanned_Row_Count);
+            auto res = cli.Get(url.c_str());
+            Scanned_Row_Count = 0;
+        }
+    }
+
+    void sendFilteredRowCount(){
+        while(true){
+            std::this_thread::sleep_for(std::chrono::seconds(2));
+            unique_lock<mutex> lock(row_mutex);
+            std::string url = "/filter?value=" + std::to_string(Filtered_Row_Count);
+            auto res = cli.Get(url.c_str());
+            Filtered_Row_Count = 0;
+        }
+    }
+
     unsigned int getCurrentBlockCount(){
-        unique_lock<mutex> lock(safe_mutex);
+        unique_lock<mutex> lock(block_mutex);
         return GetInstance().Current_Working_Block_Count;
     }
 
     unsigned long long getAccumulateBlockCount(){
-        unique_lock<mutex> lock(safe_mutex);
+        unique_lock<mutex> lock(block_mutex);
         return GetInstance().Accumulate_Working_Block_Count;
     }
 
     unsigned long long t_getAccumulateBlockCount(){
-        unique_lock<mutex> lock(safe_mutex);
+        unique_lock<mutex> lock(block_mutex);
         return GetInstance().T_Accumulate_Working_Block_Count;
     }
 
     vector<int> t_getWorkingId(){
-        unique_lock<mutex> lock(safe_mutex);
+        unique_lock<mutex> lock(block_mutex);
         return GetInstance().T_Working_Id_List;
     }
 
     void t_addBlockCount(int add_block){
-        unique_lock<mutex> lock(safe_mutex);
+        unique_lock<mutex> lock(block_mutex);
 
         if (T_Accumulate_Working_Block_Count > ULONG_LONG_MAX - add_block) {
             T_Accumulate_Working_Block_Count = ULONG_LONG_MAX - T_Accumulate_Working_Block_Count;
@@ -120,20 +156,20 @@ class MonitoringManager{
     }
 
     void t_addWorkingId(int id){
-        unique_lock<mutex> lock(safe_mutex);
+        unique_lock<mutex> lock(block_mutex);
 
         T_Working_Id_List.push_back(id);
     }
 
     void t_removeWorkingId(int id){
-        unique_lock<mutex> lock(safe_mutex);
+        unique_lock<mutex> lock(block_mutex);
 
         T_Working_Id_List.erase(std::remove(T_Working_Id_List.begin(), T_Working_Id_List.end(), id), T_Working_Id_List.end());
     }
 
 
     void addBlockCount(int add_block){
-        unique_lock<mutex> lock(safe_mutex);
+        unique_lock<mutex> lock(block_mutex);
 
         Current_Working_Block_Count += add_block;
         
@@ -144,8 +180,18 @@ class MonitoringManager{
         }
     }
 
+    void addScannedRow(int add_scanned_row){
+        unique_lock<mutex> lock(row_mutex);
+        Scanned_Row_Count += add_scanned_row;
+    }
+
+    void addFilteredRow(int add_filtered_row){
+        unique_lock<mutex> lock(row_mutex);
+        Filtered_Row_Count += add_filtered_row;
+    }
+
     void subtractCurrentBlockCount(int subtract_block){
-        unique_lock<mutex> lock(safe_mutex);
+        unique_lock<mutex> lock(block_mutex);
         if (Current_Working_Block_Count < subtract_block) {
             Current_Working_Block_Count = 0;
         } else {
@@ -154,9 +200,16 @@ class MonitoringManager{
     }
 
   private:
-    mutex safe_mutex;
+    mutex block_mutex;
+    mutex row_mutex;
+
+    httplib::Client cli;
+
     unsigned int Current_Working_Block_Count;
     unsigned long long Accumulate_Working_Block_Count;
     unsigned long long T_Accumulate_Working_Block_Count;
+    unsigned long long Scanned_Row_Count;
+    unsigned long long Filtered_Row_Count;
+
     vector<int> T_Working_Id_List;
 };

@@ -92,7 +92,8 @@ void Filter::filtering(CsdResult& result){
     }
     
     filter_result.data.row_offset.push_back(filter_result.data.data_length);
-    // cout << "[Filter]filter process working {ID:" << to_string(filter_result.snippet->query_id) << "|" << to_string(filter_result.snippet->work_id) << "}... (filtered:" << to_string(filter_result.data.filtered_row_count) << "/" << to_string(filter_result.data.scanned_row_count) << ")" << endl;
+    //cout << "[Filter]filter process working {ID:" << to_string(filter_result.snippet->query_id) << "|" << to_string(filter_result.snippet->work_id) << "}... (filtered:" << to_string(filter_result.data.filtered_row_count) << "/" << to_string(filter_result.data.scanned_row_count) << ")" << endl;
+    MonitoringManager::AddFilteredRow(filter_result.data.row_count);
     projection_layer_->enqueue_projection(filter_result);
 }
 

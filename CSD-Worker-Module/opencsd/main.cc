@@ -45,6 +45,9 @@ int main(int argc, char** argv) {
 
     thread return_layer_thread(&Return::return_worker, &return_layer);
 
+    std::thread send_scanned_row_count_thread(MonitoringManager::SendScannedRowCount);
+    std::thread send_filtered_row_count_thread(MonitoringManager::SendFilteredRowCount);
+
     httplib::Server server;
     server.Get("/tmax/monitoring", MonitoringManager::T_HandleGetMonitoring);
     server.Get("/blockcount", MonitoringManager::HandleGetBlockCount);
@@ -69,6 +72,8 @@ int main(int argc, char** argv) {
     projection_layer_thread1.join();
     projection_layer_thread2.join();
     return_layer_thread.join();
+    send_scanned_row_count_thread.join();
+    send_filtered_row_count_thread.join();
 
     return 0;
 }
